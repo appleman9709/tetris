@@ -818,7 +818,7 @@ class MobileSudokuTetris {
         for (let y = 0; y < this.BOARD_SIZE; y++) {
             for (let x = 0; x < this.BOARD_SIZE; x++) {
                 if (this.board[y][x]) {
-                    this.ctx.fillStyle = '#667eea';
+                    this.ctx.fillStyle = '#e74c3c';
                     this.ctx.fillRect(x * this.CELL_SIZE + 1, y * this.CELL_SIZE + 1, 
                                     this.CELL_SIZE - 2, this.CELL_SIZE - 2);
                 }
