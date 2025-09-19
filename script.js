@@ -659,7 +659,7 @@ class MobileSudokuTetris {
             return false;
         }
         
-        // Сначала размещаем фигуру на доске
+        // Размещаем фигуру на доске
         for (let py = 0; py < piece.shape.length; py++) {
             for (let px = 0; px < piece.shape[py].length; px++) {
                 if (piece.shape[py][px]) {
@@ -673,34 +673,27 @@ class MobileSudokuTetris {
         // Удаляем использованную фигуру
         this.availablePieces = this.availablePieces.filter(p => p.uniqueId !== piece.uniqueId);
         
-        // Анимация размещения фигуры
-        this.animatePiecePlacement(piece, x, y, () => {
-            // Проверяем заполненные линии
-            this.checkLines();
-            
-            // Если фигуры закончились, генерируем новые
-            if (this.availablePieces.length === 0) {
-                this.generatePieces();
-            }
-            
-            this.renderPieces();
-            this.draw();
-            this.updateUI();
-        });
+        // Проверяем заполненные линии
+        this.checkLines();
+        
+        // Если фигуры закончились, генерируем новые
+        if (this.availablePieces.length === 0) {
+            this.generatePieces();
+        }
+        
+        this.renderPieces();
+        this.draw();
+        this.updateUI();
         
         return true;
     }
     
     checkLines() {
         let linesCleared = 0;
-        let clearedPositions = [];
         
         // Проверяем строки
         for (let y = 0; y < this.BOARD_SIZE; y++) {
             if (this.board[y].every(cell => cell === 1)) {
-                for (let x = 0; x < this.BOARD_SIZE; x++) {
-                    clearedPositions.push({x, y, type: 'row'});
-                }
                 this.board[y].fill(0);
                 linesCleared++;
             }
@@ -709,9 +702,6 @@ class MobileSudokuTetris {
         // Проверяем столбцы
         for (let x = 0; x < this.BOARD_SIZE; x++) {
             if (this.board.every(row => row[x] === 1)) {
-                for (let y = 0; y < this.BOARD_SIZE; y++) {
-                    clearedPositions.push({x, y, type: 'column'});
-                }
                 for (let y = 0; y < this.BOARD_SIZE; y++) {
                     this.board[y][x] = 0;
                 }
@@ -736,11 +726,6 @@ class MobileSudokuTetris {
                 if (squareFilled) {
                     for (let y = startY; y < startY + 3; y++) {
                         for (let x = startX; x < startX + 3; x++) {
-                            clearedPositions.push({x, y, type: 'square'});
-                        }
-                    }
-                    for (let y = startY; y < startY + 3; y++) {
-                        for (let x = startX; x < startX + 3; x++) {
                             this.board[y][x] = 0;
                         }
                     }
@@ -754,72 +739,7 @@ class MobileSudokuTetris {
             this.score += linesCleared * 100 * this.level;
             this.level = Math.floor(this.lines / 10) + 1;
             this.updateUI();
-            
-            // Анимация очистки
-            this.animateClearEffect(clearedPositions);
         }
-    }
-    
-    animateClearEffect(clearedPositions) {
-        let animationFrame = 0;
-        const totalFrames = 30; // 0.5 seconds at 60fps
-        
-        const animate = () => {
-            animationFrame++;
-            const progress = animationFrame / totalFrames;
-            
-            // Clear canvas
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            // Draw grid
-            this.drawGrid();
-            
-            // Draw board with animation
-            for (let y = 0; y < this.BOARD_SIZE; y++) {
-                for (let x = 0; x < this.BOARD_SIZE; x++) {
-                    if (this.board[y][x]) {
-                        let color = this.getCurrentColor();
-                        let scale = 1;
-                        let rotation = 0;
-                        
-                        // Check if this position is being cleared
-                        const isClearing = clearedPositions.some(pos => pos.x === x && pos.y === y);
-                        
-                        if (isClearing) {
-                            // Animate disappearing cube
-                            scale = 1 + Math.sin(progress * Math.PI * 2) * 0.5;
-                            rotation = progress * Math.PI * 2;
-                            this.ctx.globalAlpha = 1 - progress;
-                        }
-                        
-                        this.ctx.save();
-                        this.ctx.translate(
-                            x * this.CELL_SIZE + this.CELL_SIZE / 2, 
-                            y * this.CELL_SIZE + this.CELL_SIZE / 2
-                        );
-                        this.ctx.rotate(rotation);
-                        this.ctx.fillStyle = color;
-                        const cellSize = this.CELL_SIZE * scale;
-                        this.ctx.fillRect(
-                            -cellSize / 2 + 1, 
-                            -cellSize / 2 + 1, 
-                            cellSize - 2, 
-                            cellSize - 2
-                        );
-                        this.ctx.restore();
-                        this.ctx.globalAlpha = 1;
-                    }
-                }
-            }
-            
-            if (animationFrame < totalFrames) {
-                requestAnimationFrame(animate);
-            } else {
-                this.draw();
-            }
-        };
-        
-        animate();
     }
     
     getCurrentColor() {
@@ -829,63 +749,6 @@ class MobileSudokuTetris {
             return '#2196f3';
         }
         return '#e74c3c';
-    }
-    
-    animatePiecePlacement(piece, x, y, callback) {
-        let animationFrame = 0;
-        const totalFrames = 20; // 0.33 seconds at 60fps
-        
-        const animate = () => {
-            animationFrame++;
-            const progress = animationFrame / totalFrames;
-            
-            // Clear canvas
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            // Draw grid
-            this.drawGrid();
-            
-            // Draw board
-            this.drawBoard();
-            
-            // Draw piece with animation overlay
-            const color = this.getCurrentColor();
-            const scale = 1 + Math.sin(progress * Math.PI) * 0.2;
-            const alpha = 0.8 + Math.sin(progress * Math.PI) * 0.2;
-            
-            this.ctx.save();
-            this.ctx.globalAlpha = alpha;
-            this.ctx.fillStyle = color;
-            
-            for (let py = 0; py < piece.shape.length; py++) {
-                for (let px = 0; px < piece.shape[py].length; px++) {
-                    if (piece.shape[py][px]) {
-                        const boardX = x + px;
-                        const boardY = y + py;
-                        const cellSize = this.CELL_SIZE * scale;
-                        const offset = (this.CELL_SIZE - cellSize) / 2;
-                        
-                        // Draw animated overlay
-                        this.ctx.fillRect(
-                            boardX * this.CELL_SIZE + offset + 1,
-                            boardY * this.CELL_SIZE + offset + 1,
-                            cellSize - 2,
-                            cellSize - 2
-                        );
-                    }
-                }
-            }
-            
-            this.ctx.restore();
-            
-            if (animationFrame < totalFrames) {
-                requestAnimationFrame(animate);
-            } else {
-                callback();
-            }
-        };
-        
-        animate();
     }
     
     drawWithPreview(previewX, previewY) {
