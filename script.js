@@ -23,6 +23,9 @@ class MobileSudokuTetris {
         this.draggedPiece = null;
         this.dragOffset = { x: 0, y: 0 };
         this.isDragging = false;
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.touchMoved = false;
         
         // Разнообразные фигуры
         this.tetrisPieces = [
@@ -484,6 +487,11 @@ class MobileSudokuTetris {
                 y: touch.clientY - rect.top
             };
             
+            // Сохраняем начальную позицию касания для предотвращения случайных срабатываний
+            this.touchStartX = touch.clientX;
+            this.touchStartY = touch.clientY;
+            this.touchMoved = false;
+            
             e.preventDefault();
         }
     }
@@ -494,13 +502,20 @@ class MobileSudokuTetris {
         const touch = e.touches[0];
         const canvasRect = this.canvas.getBoundingClientRect();
         
+        // Отмечаем, что касание сдвинулось
+        const deltaX = Math.abs(touch.clientX - this.touchStartX);
+        const deltaY = Math.abs(touch.clientY - this.touchStartY);
+        if (deltaX > 5 || deltaY > 5) {
+            this.touchMoved = true;
+        }
+        
         // Вычисляем позицию на canvas
         const canvasX = touch.clientX - canvasRect.left;
         const canvasY = touch.clientY - canvasRect.top;
         
-        // Конвертируем в координаты сетки
-        const gridX = Math.floor(canvasX / this.CELL_SIZE);
-        const gridY = Math.floor(canvasY / this.CELL_SIZE);
+        // Конвертируем в координаты сетки с проверкой границ
+        const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
+        const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
         
         // Проверяем, можно ли разместить фигуру
         if (this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
@@ -518,17 +533,21 @@ class MobileSudokuTetris {
         const touch = e.changedTouches[0];
         const canvasRect = this.canvas.getBoundingClientRect();
         
-        // Проверяем, был ли тач над canvas
-        if (touch.clientX >= canvasRect.left && touch.clientX <= canvasRect.right &&
-            touch.clientY >= canvasRect.top && touch.clientY <= canvasRect.bottom) {
+        // Проверяем, был ли тач над canvas (с небольшим запасом для лучшего UX)
+        const margin = 10; // Добавляем запас в 10px
+        if (touch.clientX >= canvasRect.left - margin && touch.clientX <= canvasRect.right + margin &&
+            touch.clientY >= canvasRect.top - margin && touch.clientY <= canvasRect.bottom + margin) {
             
             const canvasX = touch.clientX - canvasRect.left;
             const canvasY = touch.clientY - canvasRect.top;
             
-            const gridX = Math.floor(canvasX / this.CELL_SIZE);
-            const gridY = Math.floor(canvasY / this.CELL_SIZE);
+            // Используем Math.round вместо Math.floor для более точного позиционирования
+            // и добавляем проверку на границы
+            const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
+            const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
             
-            if (this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
+            // Размещаем фигуру только если было движение касания (не просто тап)
+            if (this.touchMoved && this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
                 this.placePiece(this.draggedPiece, gridX, gridY);
             }
         }
@@ -536,6 +555,7 @@ class MobileSudokuTetris {
         // Сбрасываем состояние
         this.isDragging = false;
         this.draggedPiece = null;
+        this.touchMoved = false;
         
         // Убираем класс dragging со всех элементов
         document.querySelectorAll('.piece-item').forEach(el => {
@@ -589,9 +609,9 @@ class MobileSudokuTetris {
         const canvasX = e.clientX - canvasRect.left;
         const canvasY = e.clientY - canvasRect.top;
         
-        // Конвертируем в координаты сетки
-        const gridX = Math.floor(canvasX / this.CELL_SIZE);
-        const gridY = Math.floor(canvasY / this.CELL_SIZE);
+        // Конвертируем в координаты сетки с проверкой границ
+        const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
+        const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
         
         // Проверяем, можно ли разместить фигуру
         if (this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
@@ -608,15 +628,18 @@ class MobileSudokuTetris {
         
         const canvasRect = this.canvas.getBoundingClientRect();
         
-        // Проверяем, был ли клик над canvas
-        if (e.clientX >= canvasRect.left && e.clientX <= canvasRect.right &&
-            e.clientY >= canvasRect.top && e.clientY <= canvasRect.bottom) {
+        // Проверяем, был ли клик над canvas (с небольшим запасом для лучшего UX)
+        const margin = 10; // Добавляем запас в 10px
+        if (e.clientX >= canvasRect.left - margin && e.clientX <= canvasRect.right + margin &&
+            e.clientY >= canvasRect.top - margin && e.clientY <= canvasRect.bottom + margin) {
             
             const canvasX = e.clientX - canvasRect.left;
             const canvasY = e.clientY - canvasRect.top;
             
-            const gridX = Math.floor(canvasX / this.CELL_SIZE);
-            const gridY = Math.floor(canvasY / this.CELL_SIZE);
+            // Используем Math.round вместо Math.floor для более точного позиционирования
+            // и добавляем проверку на границы
+            const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
+            const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
             
             if (this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
                 this.placePiece(this.draggedPiece, gridX, gridY);

@@ -32,9 +32,9 @@ body {
 
 .top-controls {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-top: 10px;
     flex-shrink: 0;
 }
 
