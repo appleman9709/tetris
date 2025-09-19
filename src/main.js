@@ -27,6 +27,10 @@ class MobileSudokuTetris {
         this.touchStartY = 0;
         this.touchMoved = false;
         
+        // Состояние выбранной фигуры
+        this.selectedPiece = null;
+        this.selectedPieceElement = null;
+        
         // Разнообразные фигуры
         this.tetrisPieces = [
             // Классические фигуры тетриса
@@ -288,6 +292,25 @@ class MobileSudokuTetris {
         return count;
     }
     
+    // Методы для управления выбранной фигурой
+    selectPiece(piece, element) {
+        // Убираем выделение с предыдущей фигуры
+        this.clearSelection();
+        
+        // Выделяем новую фигуру
+        this.selectedPiece = piece;
+        this.selectedPieceElement = element;
+        element.classList.add('selected');
+    }
+    
+    clearSelection() {
+        if (this.selectedPieceElement) {
+            this.selectedPieceElement.classList.remove('selected');
+        }
+        this.selectedPiece = null;
+        this.selectedPieceElement = null;
+    }
+    
     // Функции для работы с рекордом
     loadRecord() {
         const saved = localStorage.getItem('sudokuTetrisRecord');
@@ -474,9 +497,14 @@ class MobileSudokuTetris {
         if (!pieceElement) return;
         
         const pieceId = pieceElement.dataset.pieceId;
-        this.draggedPiece = this.availablePieces.find(p => p.uniqueId === pieceId);
+        const piece = this.availablePieces.find(p => p.uniqueId === pieceId);
         
-        if (this.draggedPiece) {
+        if (piece) {
+            // Выбираем фигуру при касании
+            this.selectPiece(piece, pieceElement);
+            
+            // Устанавливаем как перетаскиваемую фигуру
+            this.draggedPiece = piece;
             this.isDragging = true;
             pieceElement.classList.add('dragging');
             
@@ -558,6 +586,9 @@ class MobileSudokuTetris {
             el.classList.remove('dragging');
         });
         
+        // Убираем выделение с фигуры
+        this.clearSelection();
+        
         this.draw();
         e.preventDefault();
     }
@@ -581,9 +612,14 @@ class MobileSudokuTetris {
         if (!pieceElement) return;
         
         const pieceId = pieceElement.dataset.pieceId;
-        this.draggedPiece = this.availablePieces.find(p => p.uniqueId === pieceId);
+        const piece = this.availablePieces.find(p => p.uniqueId === pieceId);
         
-        if (this.draggedPiece) {
+        if (piece) {
+            // Выбираем фигуру при клике
+            this.selectPiece(piece, pieceElement);
+            
+            // Устанавливаем как перетаскиваемую фигуру
+            this.draggedPiece = piece;
             this.isDragging = true;
             pieceElement.classList.add('dragging');
             
@@ -647,6 +683,9 @@ class MobileSudokuTetris {
             el.classList.remove('dragging');
         });
         
+        // Убираем выделение с фигуры
+        this.clearSelection();
+        
         this.draw();
         e.preventDefault();
     }
@@ -687,6 +726,9 @@ class MobileSudokuTetris {
         
         // Удаляем использованную фигуру
         this.availablePieces = this.availablePieces.filter(p => p.uniqueId !== piece.uniqueId);
+        
+        // Убираем выделение с размещенной фигуры
+        this.clearSelection();
         
         // Проверяем заполненные линии
         this.checkLines();
@@ -891,6 +933,9 @@ class MobileSudokuTetris {
         this.gameRunning = true;
         this.draggedPiece = null;
         this.isDragging = false;
+        
+        // Сбрасываем выделение
+        this.clearSelection();
         
         document.getElementById('gameOver').style.display = 'none';
         this.updateUI();

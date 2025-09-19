@@ -268,6 +268,21 @@ body.blue-theme .retro-btn {
     box-shadow: none;
 }
 
+.piece-item.selected {
+    transform: translateY(-8px) scale(1.1);
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.3),
+        0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #fff;
+    border-radius: 12px;
+}
+
+.piece-item.selected .piece-canvas {
+    filter: brightness(1.1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
 .piece-item:hover {
     transform: scale(1.05);
     box-shadow: none;
