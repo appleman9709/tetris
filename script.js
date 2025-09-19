@@ -659,22 +659,22 @@ class MobileSudokuTetris {
             return false;
         }
         
-        // Анимация размещения фигуры
-        this.animatePiecePlacement(piece, x, y, () => {
-            // Размещаем фигуру на доске
-            for (let py = 0; py < piece.shape.length; py++) {
-                for (let px = 0; px < piece.shape[py].length; px++) {
-                    if (piece.shape[py][px]) {
-                        const boardX = x + px;
-                        const boardY = y + py;
-                        this.board[boardY][boardX] = 1;
-                    }
+        // Сначала размещаем фигуру на доске
+        for (let py = 0; py < piece.shape.length; py++) {
+            for (let px = 0; px < piece.shape[py].length; px++) {
+                if (piece.shape[py][px]) {
+                    const boardX = x + px;
+                    const boardY = y + py;
+                    this.board[boardY][boardX] = 1;
                 }
             }
-            
-            // Удаляем использованную фигуру
-            this.availablePieces = this.availablePieces.filter(p => p.uniqueId !== piece.uniqueId);
-            
+        }
+        
+        // Удаляем использованную фигуру
+        this.availablePieces = this.availablePieces.filter(p => p.uniqueId !== piece.uniqueId);
+        
+        // Анимация размещения фигуры
+        this.animatePiecePlacement(piece, x, y, () => {
             // Проверяем заполненные линии
             this.checkLines();
             
@@ -848,10 +848,10 @@ class MobileSudokuTetris {
             // Draw board
             this.drawBoard();
             
-            // Draw piece with animation
+            // Draw piece with animation overlay
             const color = this.getCurrentColor();
-            const scale = 1 + Math.sin(progress * Math.PI) * 0.3;
-            const alpha = 0.7 + Math.sin(progress * Math.PI) * 0.3;
+            const scale = 1 + Math.sin(progress * Math.PI) * 0.2;
+            const alpha = 0.8 + Math.sin(progress * Math.PI) * 0.2;
             
             this.ctx.save();
             this.ctx.globalAlpha = alpha;
@@ -865,6 +865,7 @@ class MobileSudokuTetris {
                         const cellSize = this.CELL_SIZE * scale;
                         const offset = (this.CELL_SIZE - cellSize) / 2;
                         
+                        // Draw animated overlay
                         this.ctx.fillRect(
                             boardX * this.CELL_SIZE + offset + 1,
                             boardY * this.CELL_SIZE + offset + 1,
