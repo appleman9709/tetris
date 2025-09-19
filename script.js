@@ -517,12 +517,8 @@ class MobileSudokuTetris {
         const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
         const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
         
-        // Проверяем, можно ли разместить фигуру
-        if (this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
-            this.drawWithPreview(gridX, gridY);
-        } else {
-            this.draw();
-        }
+        // Всегда показываем полупрозрачную фигуру, независимо от возможности размещения
+        this.drawWithPreview(gridX, gridY, this.canPlacePiece(this.draggedPiece, gridX, gridY));
         
         e.preventDefault();
     }
@@ -613,12 +609,8 @@ class MobileSudokuTetris {
         const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
         const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
         
-        // Проверяем, можно ли разместить фигуру
-        if (this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
-            this.drawWithPreview(gridX, gridY);
-        } else {
-            this.draw();
-        }
+        // Всегда показываем полупрозрачную фигуру, независимо от возможности размещения
+        this.drawWithPreview(gridX, gridY, this.canPlacePiece(this.draggedPiece, gridX, gridY));
         
         e.preventDefault();
     }
@@ -774,12 +766,18 @@ class MobileSudokuTetris {
         return '#e74c3c';
     }
     
-    drawWithPreview(previewX, previewY) {
+    drawWithPreview(previewX, previewY, canPlace = true) {
         this.draw();
         
         if (this.draggedPiece) {
-            this.ctx.fillStyle = this.draggedPiece.color;
-            this.ctx.globalAlpha = 0.7;
+            // Устанавливаем цвет в зависимости от возможности размещения
+            if (canPlace) {
+                this.ctx.fillStyle = this.draggedPiece.color;
+                this.ctx.globalAlpha = 0.7;
+            } else {
+                this.ctx.fillStyle = '#ff4444'; // Красный цвет когда нельзя поставить
+                this.ctx.globalAlpha = 0.5;
+            }
             
             for (let py = 0; py < this.draggedPiece.shape.length; py++) {
                 for (let px = 0; px < this.draggedPiece.shape[py].length; px++) {
@@ -788,6 +786,11 @@ class MobileSudokuTetris {
                         const y = (previewY + py) * this.CELL_SIZE;
                         
                         this.ctx.fillRect(x + 1, y + 1, this.CELL_SIZE - 2, this.CELL_SIZE - 2);
+                        
+                        // Добавляем обводку для лучшей видимости
+                        this.ctx.strokeStyle = canPlace ? '#4a5568' : '#ff0000';
+                        this.ctx.lineWidth = 1;
+                        this.ctx.strokeRect(x + 1, y + 1, this.CELL_SIZE - 2, this.CELL_SIZE - 2);
                     }
                 }
             }
