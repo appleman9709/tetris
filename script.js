@@ -408,11 +408,11 @@ class MobileSudokuTetris {
             
             const canvas = document.createElement('canvas');
             canvas.className = 'piece-canvas';
-            canvas.width = piece.size * 15;
-            canvas.height = piece.size * 15;
+            canvas.width = piece.size * 20;
+            canvas.height = piece.size * 20;
             
             const ctx = canvas.getContext('2d');
-            this.drawPieceOnCanvas(ctx, piece, 15);
+            this.drawPieceOnCanvas(ctx, piece, 20);
             
             pieceElement.appendChild(canvas);
             this.piecesContainer.appendChild(pieceElement);
