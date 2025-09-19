@@ -815,10 +815,17 @@ class MobileSudokuTetris {
     }
     
     drawBoard() {
+        let color = '#e74c3c'; // Default red
+        if (document.body.classList.contains('pink-theme')) {
+            color = '#e91e63';
+        } else if (document.body.classList.contains('blue-theme')) {
+            color = '#2196f3';
+        }
+        
         for (let y = 0; y < this.BOARD_SIZE; y++) {
             for (let x = 0; x < this.BOARD_SIZE; x++) {
                 if (this.board[y][x]) {
-                    this.ctx.fillStyle = '#e74c3c';
+                    this.ctx.fillStyle = color;
                     this.ctx.fillRect(x * this.CELL_SIZE + 1, y * this.CELL_SIZE + 1, 
                                     this.CELL_SIZE - 2, this.CELL_SIZE - 2);
                 }
@@ -830,7 +837,6 @@ class MobileSudokuTetris {
         document.getElementById('score').textContent = this.score;
         document.getElementById('level').textContent = this.level;
         document.getElementById('lines').textContent = this.lines;
-        document.getElementById('piecesCount').textContent = this.availablePieces.length;
         document.getElementById('record').textContent = this.record;
     }
     
@@ -882,8 +888,67 @@ function restartGame() {
     game.restart();
 }
 
+// Theme switching functionality
+class ThemeManager {
+    constructor() {
+        this.currentTheme = 'red'; // red, pink, blue
+        this.themes = ['red', 'pink', 'blue'];
+        this.themeIndex = 0;
+        this.init();
+    }
+    
+    init() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.switchTheme());
+        }
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('sudokuTetrisTheme');
+        if (savedTheme && this.themes.includes(savedTheme)) {
+            this.setTheme(savedTheme);
+        }
+    }
+    
+    switchTheme() {
+        this.themeIndex = (this.themeIndex + 1) % this.themes.length;
+        const newTheme = this.themes[this.themeIndex];
+        this.setTheme(newTheme);
+        localStorage.setItem('sudokuTetrisTheme', newTheme);
+    }
+    
+    setTheme(theme) {
+        // Remove all theme classes
+        document.body.classList.remove('pink-theme', 'blue-theme');
+        
+        if (theme === 'pink') {
+            document.body.classList.add('pink-theme');
+            this.updatePieceColors('#e91e63');
+        } else if (theme === 'blue') {
+            document.body.classList.add('blue-theme');
+            this.updatePieceColors('#2196f3');
+        } else {
+            this.updatePieceColors('#e74c3c');
+        }
+        
+        this.currentTheme = theme;
+    }
+    
+    updatePieceColors(color) {
+        // Update piece colors in the game
+        if (window.game && window.game.tetrisPieces) {
+            window.game.tetrisPieces.forEach(piece => {
+                piece.color = color;
+            });
+            window.game.draw();
+        }
+    }
+}
+
 // Инициализация игры
 let game;
+let themeManager;
 window.addEventListener('load', () => {
     game = new MobileSudokuTetris();
+    themeManager = new ThemeManager();
 });

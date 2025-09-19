@@ -49,7 +49,8 @@ h1 {
 
 .game-info {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 8px;
     flex-shrink: 0;
 }
@@ -80,6 +81,144 @@ h1 {
     background: linear-gradient(145deg, #f39c12, #e67e22) !important;
     border-color: #d68910 !important;
     text-shadow: 1px 1px 0px #d68910 !important;
+}
+
+.theme-toggle {
+    margin-top: 8px;
+}
+
+.theme-btn {
+    background: linear-gradient(145deg, #e74c3c, #c0392b);
+    color: #ecf0f1;
+    border: 2px solid #a93226;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 1.2em;
+    cursor: pointer;
+    text-shadow: 1px 1px 0px #a93226;
+    box-shadow: 
+        inset 0 1px 0px rgba(255, 255, 255, 0.2),
+        0 3px 6px rgba(0, 0, 0, 0.3);
+    font-family: 'Courier New', monospace;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-btn:active {
+    transform: scale(0.95);
+    box-shadow: 
+        inset 0 1px 0px rgba(0, 0, 0, 0.2),
+        0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Pink theme */
+body.pink-theme {
+    background: linear-gradient(135deg, #e91e63 0%, #ad1457 50%, #e91e63 100%);
+}
+
+body.pink-theme .game-container {
+    background: linear-gradient(145deg, #ad1457, #880e4f);
+    border-color: #e91e63;
+    box-shadow: 
+        0 0 20px rgba(233, 30, 99, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+body.pink-theme h1 {
+    color: #e91e63;
+    text-shadow: 
+        2px 2px 0px #ad1457,
+        4px 4px 0px #880e4f,
+        0 0 10px rgba(233, 30, 99, 0.5);
+}
+
+body.pink-theme .game-info > div > div {
+    background: linear-gradient(145deg, #e91e63, #ad1457);
+    border-color: #880e4f;
+    text-shadow: 1px 1px 0px #880e4f;
+}
+
+body.pink-theme .record {
+    background: linear-gradient(145deg, #f48fb1, #f06292) !important;
+    border-color: #e91e63 !important;
+    text-shadow: 1px 1px 0px #e91e63 !important;
+}
+
+body.pink-theme #gameCanvas {
+    border-color: #e91e63;
+    background: #ad1457;
+    box-shadow: 
+        0 0 15px rgba(233, 30, 99, 0.4),
+        inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body.pink-theme .control-btn {
+    background: linear-gradient(145deg, #e91e63, #ad1457);
+    border-color: #880e4f;
+    text-shadow: 1px 1px 0px #880e4f;
+}
+
+body.pink-theme .theme-btn {
+    background: linear-gradient(145deg, #e91e63, #ad1457);
+    border-color: #880e4f;
+    text-shadow: 1px 1px 0px #880e4f;
+}
+
+/* Blue theme */
+body.blue-theme {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 50%, #2196f3 100%);
+}
+
+body.blue-theme .game-container {
+    background: linear-gradient(145deg, #1976d2, #1565c0);
+    border-color: #2196f3;
+    box-shadow: 
+        0 0 20px rgba(33, 150, 243, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+body.blue-theme h1 {
+    color: #2196f3;
+    text-shadow: 
+        2px 2px 0px #1976d2,
+        4px 4px 0px #1565c0,
+        0 0 10px rgba(33, 150, 243, 0.5);
+}
+
+body.blue-theme .game-info > div > div {
+    background: linear-gradient(145deg, #2196f3, #1976d2);
+    border-color: #1565c0;
+    text-shadow: 1px 1px 0px #1565c0;
+}
+
+body.blue-theme .record {
+    background: linear-gradient(145deg, #64b5f6, #42a5f5) !important;
+    border-color: #2196f3 !important;
+    text-shadow: 1px 1px 0px #2196f3 !important;
+}
+
+body.blue-theme #gameCanvas {
+    border-color: #2196f3;
+    background: #1976d2;
+    box-shadow: 
+        0 0 15px rgba(33, 150, 243, 0.4),
+        inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+body.blue-theme .control-btn {
+    background: linear-gradient(145deg, #2196f3, #1976d2);
+    border-color: #1565c0;
+    text-shadow: 1px 1px 0px #1565c0;
+}
+
+body.blue-theme .theme-btn {
+    background: linear-gradient(145deg, #2196f3, #1976d2);
+    border-color: #1565c0;
+    text-shadow: 1px 1px 0px #1565c0;
 }
 
 .game-area {
