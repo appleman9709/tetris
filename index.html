@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Судоку Тетрис</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <h1>Судоку Тетрис</h1>
+            <div class="game-info">
+                <div class="score">Очки: <span id="score">0</span></div>
+                <div class="level">Уровень: <span id="level">1</span></div>
+                <div class="lines">Линии: <span id="lines">0</span></div>
+                <div class="debug">Фигур: <span id="piecesCount">8</span></div>
+            </div>
+        </header>
+        
+        <div class="game-area">
+            <div class="game-board">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+            
+            <div class="pieces-panel">
+                <h3>Фигуры:</h3>
+                <div class="pieces-container" id="piecesContainer">
+                    <!-- Фигуры будут добавлены динамически -->
+                </div>
+            </div>
+            
+            <div class="mobile-controls">
+                <button class="control-btn" id="restartBtn">🔄 Перезапуск</button>
+                <button class="control-btn" id="clearBtn">🗑️ Очистить</button>
+            </div>
+        </div>
+        
+        <div class="game-over" id="gameOver" style="display: none;">
+            <h2>Игра окончена!</h2>
+            <p>Финальный счет: <span id="finalScore">0</span></p>
+            <button onclick="restartGame()">Играть снова</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
