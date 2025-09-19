@@ -326,6 +326,98 @@ class MobileSudokuTetris {
         return false;
     }
     
+    // Функции для сохранения и загрузки состояния игры
+    saveGameState() {
+        const gameState = {
+            board: this.board,
+            score: this.score,
+            level: this.level,
+            lines: this.lines,
+            availablePieces: this.availablePieces,
+            gameRunning: this.gameRunning,
+            timestamp: Date.now()
+        };
+        
+        try {
+            localStorage.setItem('sudokuTetrisGameState', JSON.stringify(gameState));
+            console.log('Игра сохранена');
+            
+            // Показываем уведомление о сохранении
+            this.showSaveNotification();
+        } catch (error) {
+            console.error('Ошибка при сохранении игры:', error);
+        }
+    }
+    
+    showSaveNotification() {
+        // Создаем уведомление о сохранении
+        const notification = document.createElement('div');
+        notification.textContent = 'Игра сохранена!';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: opacity 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Убираем уведомление через 2 секунды
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 2000);
+    }
+    
+    loadGameState() {
+        try {
+            const saved = localStorage.getItem('sudokuTetrisGameState');
+            if (saved) {
+                const gameState = JSON.parse(saved);
+                
+                // Проверяем, что сохранение не слишком старое (например, не старше 7 дней)
+                const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 дней в миллисекундах
+                if (Date.now() - gameState.timestamp > maxAge) {
+                    console.log('Сохранение слишком старое, начинаем новую игру');
+                    return false;
+                }
+                
+                this.board = gameState.board;
+                this.score = gameState.score;
+                this.level = gameState.level;
+                this.lines = gameState.lines;
+                this.availablePieces = gameState.availablePieces;
+                this.gameRunning = gameState.gameRunning;
+                
+                console.log('Игра загружена');
+                return true;
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке игры:', error);
+        }
+        return false;
+    }
+    
+    clearGameState() {
+        try {
+            localStorage.removeItem('sudokuTetrisGameState');
+            console.log('Сохранение игры очищено');
+        } catch (error) {
+            console.error('Ошибка при очистке сохранения:', error);
+        }
+    }
+    
     // Функция для поворота фигуры на 90 градусов
     rotateShape(shape) {
         const rows = shape.length;
@@ -378,7 +470,17 @@ class MobileSudokuTetris {
     }
     
     init() {
-        this.generatePieces();
+        // Пытаемся загрузить сохраненную игру
+        const gameLoaded = this.loadGameState();
+        
+        if (!gameLoaded) {
+            // Если игра не загружена, начинаем новую
+            this.generatePieces();
+        } else {
+            // Если игра загружена, обновляем интерфейс
+            this.renderPieces();
+        }
+        
         this.draw();
         this.setupEventListeners();
         this.updateUI();
@@ -474,6 +576,7 @@ class MobileSudokuTetris {
         this.piecesContainer.addEventListener('mouseup', (e) => this.handlePieceMouseEnd(e));
         
         // Кнопки управления
+        document.getElementById('saveBtn').addEventListener('click', () => this.saveGameState());
         document.getElementById('restartBtn').addEventListener('click', () => this.restart());
         document.getElementById('clearBtn').addEventListener('click', () => this.clearBoard());
         
@@ -742,6 +845,9 @@ class MobileSudokuTetris {
         this.draw();
         this.updateUI();
         
+        // Автоматически сохраняем игру после каждого размещения фигуры
+        this.saveGameState();
+        
         return true;
     }
     
@@ -796,6 +902,9 @@ class MobileSudokuTetris {
             this.score += linesCleared * 100 * this.level;
             this.level = Math.floor(this.lines / 10) + 1;
             this.updateUI();
+            
+            // Сохраняем игру после очистки линий
+            this.saveGameState();
         }
     }
     
@@ -901,6 +1010,9 @@ class MobileSudokuTetris {
     clearBoard() {
         this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
         this.draw();
+        
+        // Сохраняем игру после очистки доски
+        this.saveGameState();
     }
     
     
@@ -936,6 +1048,9 @@ class MobileSudokuTetris {
         
         // Сбрасываем выделение
         this.clearSelection();
+        
+        // Очищаем сохраненное состояние при перезапуске
+        this.clearGameState();
         
         document.getElementById('gameOver').style.display = 'none';
         this.updateUI();
