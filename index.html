@@ -9,18 +9,24 @@
 </head>
 <body>
     <div class="game-container">
+        <div class="top-controls">
+            <button id="themeToggle" class="retro-btn" title="Переключить тему">🎨</button>
+            <button class="retro-btn" id="restartBtn" title="Перезапуск">🔄</button>
+            <button class="retro-btn" id="clearBtn" title="Очистить">🗑️</button>
+        </div>
+        
         <header>
-            <h1>Релакс для жены</h1>
+            <h1>Релакс для Жены</h1>
             <div class="game-info">
                 <div class="info-row">
                     <div class="score">Очки: <span id="score">0</span></div>
                     <div class="level">Уровень: <span id="level">1</span></div>
                     <div class="lines">Линии: <span id="lines">0</span></div>
-                    <div class="record">Рекорд: <span id="record">0</span></div>
-                    <button id="themeToggle" class="theme-btn">🎨</button>
                 </div>
             </div>
         </header>
+        
+        <div class="record">🏆 <span class="record-label">За все время:</span> <span id="record">0</span></div>
         
         <div class="game-area">
             <div class="game-board">
@@ -31,11 +37,6 @@
                 <div class="pieces-container" id="piecesContainer">
                     <!-- Фигуры будут добавлены динамически -->
                 </div>
-            </div>
-            
-            <div class="mobile-controls">
-                <button class="control-btn" id="restartBtn">🔄 Перезапуск</button>
-                <button class="control-btn" id="clearBtn">🗑️ Очистить</button>
             </div>
         </div>
         

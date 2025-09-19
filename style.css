@@ -10,13 +10,13 @@ body {
     height: 100vh;
     margin: 0;
     padding: 5px;
+    padding-top: 20px; /* Отступ сверху для Telegram mini-app */
     color: #ecf0f1;
     overflow: hidden;
 }
 
 .game-container {
     background: linear-gradient(145deg, #34495e, #2c3e50);
-    border: 3px solid #e74c3c;
     border-radius: 15px;
     padding: 12px;
     box-shadow: 
@@ -27,6 +27,15 @@ body {
     height: calc(100vh - 10px);
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.top-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
 header {
@@ -68,7 +77,6 @@ h1 {
     color: #ecf0f1;
     padding: 4px 8px;
     border: 2px solid #a93226;
-    border-radius: 8px;
     font-weight: bold;
     font-size: 0.8em;
     text-shadow: 1px 1px 0px #a93226;
@@ -78,46 +86,21 @@ h1 {
 }
 
 .record {
-    background: linear-gradient(145deg, #f39c12, #e67e22) !important;
-    border-color: #d68910 !important;
-    text-shadow: 1px 1px 0px #d68910 !important;
+    color: #f39c12;
+    font-weight: bold;
+    font-size: 1.2em;
+    text-shadow: 2px 2px 0px #e67e22;
+    text-align: center;
+    margin: 10px 0;
+    flex-shrink: 0;
 }
 
-.theme-btn {
-    background: linear-gradient(145deg, #e74c3c, #c0392b);
-    color: #ecf0f1;
-    border: 2px solid #a93226;
-    padding: 4px 8px;
-    border-radius: 15px;
+.record-label {
+    color: #fff;
     font-size: 1em;
-    cursor: pointer;
-    text-shadow: 1px 1px 0px #a93226;
-    box-shadow: 
-        inset 0 1px 0px rgba(255, 255, 255, 0.2),
-        0 2px 4px rgba(0, 0, 0, 0.3);
-    font-family: 'Courier New', monospace;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+    text-shadow: 1px 1px 0px #000;
 }
 
-.theme-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 
-        inset 0 1px 0px rgba(255, 255, 255, 0.3),
-        0 4px 8px rgba(0, 0, 0, 0.4);
-}
-
-.theme-btn:active {
-    transform: scale(0.95);
-    box-shadow: 
-        inset 0 1px 0px rgba(0, 0, 0, 0.2),
-        0 1px 3px rgba(0, 0, 0, 0.3);
-}
 
 /* Pink theme - only UI elements */
 body.pink-theme .game-info > div > div {
@@ -127,9 +110,13 @@ body.pink-theme .game-info > div > div {
 }
 
 body.pink-theme .record {
-    background: linear-gradient(145deg, #f48fb1, #f06292) !important;
-    border-color: #e91e63 !important;
-    text-shadow: 1px 1px 0px #e91e63 !important;
+    color: #e91e63;
+    text-shadow: 2px 2px 0px #ad1457;
+}
+
+body.pink-theme .record-label {
+    color: #fff;
+    text-shadow: 1px 1px 0px #000;
 }
 
 body.pink-theme #gameCanvas {
@@ -145,10 +132,14 @@ body.pink-theme .control-btn {
     text-shadow: 1px 1px 0px #880e4f;
 }
 
-body.pink-theme .theme-btn {
-    background: linear-gradient(145deg, #e91e63, #ad1457);
-    border-color: #880e4f;
-    text-shadow: 1px 1px 0px #880e4f;
+
+body.pink-theme .retro-btn {
+    background: linear-gradient(145deg, #ad1457, #880e4f);
+    border-color: #4a0e2a;
+    color: #ff69b4;
+    text-shadow: 
+        2px 2px 0px #4a0e2a,
+        0 0 8px rgba(255, 105, 180, 0.8);
 }
 
 /* Blue theme - only UI elements */
@@ -159,9 +150,13 @@ body.blue-theme .game-info > div > div {
 }
 
 body.blue-theme .record {
-    background: linear-gradient(145deg, #64b5f6, #42a5f5) !important;
-    border-color: #2196f3 !important;
-    text-shadow: 1px 1px 0px #2196f3 !important;
+    color: #2196f3;
+    text-shadow: 2px 2px 0px #1976d2;
+}
+
+body.blue-theme .record-label {
+    color: #fff;
+    text-shadow: 1px 1px 0px #000;
 }
 
 body.blue-theme #gameCanvas {
@@ -177,10 +172,14 @@ body.blue-theme .control-btn {
     text-shadow: 1px 1px 0px #1565c0;
 }
 
-body.blue-theme .theme-btn {
-    background: linear-gradient(145deg, #2196f3, #1976d2);
-    border-color: #1565c0;
-    text-shadow: 1px 1px 0px #1565c0;
+
+body.blue-theme .retro-btn {
+    background: linear-gradient(145deg, #1976d2, #1565c0);
+    border-color: #0d47a1;
+    color: #64b5f6;
+    text-shadow: 
+        2px 2px 0px #0d47a1,
+        0 0 8px rgba(100, 181, 246, 0.8);
 }
 
 .game-area {
@@ -280,31 +279,69 @@ body.blue-theme .theme-btn {
     max-height: 50px;
 }
 
-.mobile-controls {
+
+.retro-btn {
+    background: linear-gradient(145deg, #8b4513, #654321);
+    color: #ffd700;
+    border: 3px solid #4a2c17;
+    padding: 8px;
+    font-size: 1.2em;
+    cursor: pointer;
+    text-shadow: 
+        2px 2px 0px #4a2c17,
+        0 0 8px rgba(255, 215, 0, 0.8);
+    box-shadow: 
+        inset 0 2px 0px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 0px rgba(0, 0, 0, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.4);
+    font-family: 'Courier New', monospace;
+    border-radius: 0;
+    transition: all 0.15s ease;
+    width: 45px;
+    height: 45px;
     display: flex;
-    gap: 8px;
+    align-items: center;
     justify-content: center;
-    width: 100%;
-    max-width: 350px;
-    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.control-btn {
-    background: linear-gradient(145deg, #e74c3c, #c0392b);
-    color: #ecf0f1;
-    border: 2px solid #a93226;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 0.85em;
-    font-weight: bold;
-    cursor: pointer;
-    flex: 1;
-    max-width: 110px;
-    text-shadow: 1px 1px 0px #a93226;
+.retro-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.1) 50%, 
+        transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.retro-btn:hover::before {
+    transform: translateX(100%);
+}
+
+.retro-btn:hover {
+    transform: translateY(-2px);
     box-shadow: 
-        inset 0 1px 0px rgba(255, 255, 255, 0.2),
-        0 3px 6px rgba(0, 0, 0, 0.3);
-    font-family: 'Courier New', monospace;
+        inset 0 2px 0px rgba(255, 255, 255, 0.4),
+        inset 0 -2px 0px rgba(0, 0, 0, 0.4),
+        0 6px 12px rgba(0, 0, 0, 0.5);
+    text-shadow: 
+        2px 2px 0px #4a2c17,
+        0 0 12px rgba(255, 215, 0, 1);
+}
+
+.retro-btn:active {
+    transform: translateY(0);
+    box-shadow: 
+        inset 0 2px 0px rgba(0, 0, 0, 0.2),
+        inset 0 -2px 0px rgba(255, 255, 255, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .control-btn:active {
@@ -471,9 +508,6 @@ body.blue-theme .theme-btn {
     100% { transform: scale(1); }
 }
 
-.game-info > div {
-    animation: pulse 2s infinite;
-}
 
 /* Стили для клеток судоку */
 .sudoku-grid {
