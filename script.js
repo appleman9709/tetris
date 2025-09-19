@@ -5,7 +5,7 @@ class MobileSudokuTetris {
         this.piecesContainer = document.getElementById('piecesContainer');
         
         this.BOARD_SIZE = 9;
-        this.CELL_SIZE = 35; // Уменьшенный размер для мобильных устройств
+        this.CELL_SIZE = 40; // Увеличенный размер для лучшей видимости
         
         // Устанавливаем размер canvas
         this.canvas.width = this.BOARD_SIZE * this.CELL_SIZE;
@@ -360,7 +360,7 @@ class MobileSudokuTetris {
     
     generatePieces() {
         this.availablePieces = [];
-        const piecesToGenerate = 8; // Количество фигур на панели
+        const piecesToGenerate = 5; // Количество фигур на панели
         
         // Фильтруем фигуры по размеру (максимум 5 кубиков)
         const validPieces = this.tetrisPieces.filter(piece => {

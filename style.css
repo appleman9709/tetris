@@ -90,8 +90,10 @@ h1 {
     padding: 0;
     box-shadow: none;
     width: 100%;
-    max-width: 350px;
+    max-width: 400px;
     flex-shrink: 0;
+    display: flex;
+    justify-content: center;
 }
 
 #gameCanvas {
@@ -101,8 +103,8 @@ h1 {
     box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
     width: 100%;
     height: auto;
-    max-width: 320px;
-    max-height: 320px;
+    max-width: 360px;
+    max-height: 360px;
     touch-action: none;
 }
 
@@ -112,15 +114,18 @@ h1 {
     padding: 8px;
     box-shadow: none;
     width: 100%;
-    max-width: 350px;
+    max-width: 400px;
     flex-shrink: 0;
+    display: flex;
+    justify-content: center;
 }
 
 .pieces-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-    gap: 6px;
-    margin-top: 6px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 0;
+    max-width: 300px;
 }
 
 .piece-item {
