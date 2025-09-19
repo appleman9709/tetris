@@ -17,6 +17,7 @@ class MobileSudokuTetris {
         this.level = 1;
         this.lines = 0;
         this.gameRunning = true;
+        this.record = this.loadRecord();
         
         // Состояние перетаскивания
         this.draggedPiece = null;
@@ -282,6 +283,21 @@ class MobileSudokuTetris {
             }
         }
         return count;
+    }
+    
+    // Функции для работы с рекордом
+    loadRecord() {
+        const saved = localStorage.getItem('sudokuTetrisRecord');
+        return saved ? parseInt(saved) : 0;
+    }
+    
+    saveRecord(score) {
+        if (score > this.record) {
+            this.record = score;
+            localStorage.setItem('sudokuTetrisRecord', score.toString());
+            return true; // Новый рекорд
+        }
+        return false;
     }
     
     // Функция для поворота фигуры на 90 градусов
@@ -815,6 +831,7 @@ class MobileSudokuTetris {
         document.getElementById('level').textContent = this.level;
         document.getElementById('lines').textContent = this.lines;
         document.getElementById('piecesCount').textContent = this.availablePieces.length;
+        document.getElementById('record').textContent = this.record;
     }
     
     clearBoard() {
@@ -822,6 +839,27 @@ class MobileSudokuTetris {
         this.draw();
     }
     
+    
+    gameOver() {
+        this.gameRunning = false;
+        
+        // Проверяем рекорд
+        const isNewRecord = this.saveRecord(this.score);
+        
+        document.getElementById('finalScore').textContent = this.score;
+        
+        // Показываем сообщение о новом рекорде
+        if (isNewRecord) {
+            const gameOverElement = document.getElementById('gameOver');
+            gameOverElement.innerHTML = `
+                <h2>🎉 Новый рекорд!</h2>
+                <p>Поздравляем! Вы установили новый рекорд: <span id="finalScore">${this.score}</span></p>
+                <button onclick="restartGame()">Играть снова</button>
+            `;
+        }
+        
+        document.getElementById('gameOver').style.display = 'block';
+    }
     
     restart() {
         this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
