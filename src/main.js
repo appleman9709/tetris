@@ -341,44 +341,11 @@ class MobileSudokuTetris {
         try {
             localStorage.setItem('sudokuTetrisGameState', JSON.stringify(gameState));
             console.log('Игра сохранена');
-            
-            // Показываем уведомление о сохранении
-            this.showSaveNotification();
         } catch (error) {
             console.error('Ошибка при сохранении игры:', error);
         }
     }
     
-    showSaveNotification() {
-        // Создаем уведомление о сохранении
-        const notification = document.createElement('div');
-        notification.textContent = 'Игра сохранена!';
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 1000;
-            font-size: 14px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            transition: opacity 0.3s ease;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Убираем уведомление через 2 секунды
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 300);
-        }, 2000);
-    }
     
     loadGameState() {
         try {
