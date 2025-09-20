@@ -444,8 +444,8 @@ class MobileSudokuTetris {
             // Если игра не загружена, начинаем новую
             this.generatePieces();
         } else {
-            // Если игра загружена, обновляем интерфейс
-            this.renderPieces();
+            // Если игра загружена, обновляем интерфейс без анимации
+            this.renderPieces(false);
         }
         
         this.draw();
@@ -486,13 +486,16 @@ class MobileSudokuTetris {
             this.availablePieces.push(piece);
         }
         
-        this.renderPieces();
+        this.renderPieces(true); // С анимацией для новых фигур
+        
+        // Проверяем условия окончания игры после генерации новых фигур
+        this.checkGameOver();
     }
     
-    renderPieces() {
+    renderPieces(animate = false) {
         this.piecesContainer.innerHTML = '';
         
-        this.availablePieces.forEach(piece => {
+        this.availablePieces.forEach((piece, index) => {
             const pieceElement = document.createElement('div');
             pieceElement.className = 'piece-item';
             pieceElement.draggable = true;
@@ -508,6 +511,18 @@ class MobileSudokuTetris {
             
             pieceElement.appendChild(canvas);
             this.piecesContainer.appendChild(pieceElement);
+            
+            // Добавляем анимацию появления только если animate = true
+            if (animate) {
+                setTimeout(() => {
+                    pieceElement.classList.add('appearing');
+                    
+                    // Убираем класс анимации после завершения
+                    setTimeout(() => {
+                        pieceElement.classList.remove('appearing');
+                    }, 600); // Длительность анимации
+                }, index * 100); // Задержка между фигурами
+            }
         });
     }
     
@@ -543,9 +558,8 @@ class MobileSudokuTetris {
         this.piecesContainer.addEventListener('mouseup', (e) => this.handlePieceMouseEnd(e));
         
         // Кнопки управления
-        document.getElementById('saveBtn').addEventListener('click', () => this.saveGameState());
-        document.getElementById('restartBtn').addEventListener('click', () => this.restart());
-        document.getElementById('clearBtn').addEventListener('click', () => this.clearBoard());
+        document.getElementById('backBtn').addEventListener('click', () => this.restart());
+        document.getElementById('settingsBtn').addEventListener('click', () => this.clearBoard());
         
         // Предотвращаем скролл страницы при перетаскивании
         document.addEventListener('touchmove', (e) => {
@@ -806,14 +820,18 @@ class MobileSudokuTetris {
         // Если фигуры закончились, генерируем новые
         if (this.availablePieces.length === 0) {
             this.generatePieces();
+        } else {
+            this.renderPieces(false); // Без анимации при обновлении панели
         }
         
-        this.renderPieces();
         this.draw();
         this.updateUI();
         
         // Автоматически сохраняем игру после каждого размещения фигуры
         this.saveGameState();
+        
+        // Проверяем условия окончания игры
+        this.checkGameOver();
         
         return true;
     }
@@ -839,34 +857,9 @@ class MobileSudokuTetris {
             }
         }
         
-        // Проверяем квадраты 3x3
-        for (let startY = 0; startY < this.BOARD_SIZE; startY += 3) {
-            for (let startX = 0; startX < this.BOARD_SIZE; startX += 3) {
-                let squareFilled = true;
-                for (let y = startY; y < startY + 3; y++) {
-                    for (let x = startX; x < startX + 3; x++) {
-                        if (this.board[y][x] !== 1) {
-                            squareFilled = false;
-                            break;
-                        }
-                    }
-                    if (!squareFilled) break;
-                }
-                
-                if (squareFilled) {
-                    for (let y = startY; y < startY + 3; y++) {
-                        for (let x = startX; x < startX + 3; x++) {
-                            this.board[y][x] = 0;
-                        }
-                    }
-                    linesCleared++;
-                }
-            }
-        }
-        
         if (linesCleared > 0) {
             this.lines += linesCleared;
-            this.score += linesCleared * 100 * this.level;
+            this.score += linesCleared * 10 * this.level;
             this.level = Math.floor(this.lines / 10) + 1;
             this.updateUI();
             
@@ -875,13 +868,81 @@ class MobileSudokuTetris {
         }
     }
     
+    // Проверяет, есть ли доступные ходы для всех фигур
+    hasAvailableMoves() {
+        // Если нет фигур, игра не окончена (будут сгенерированы новые)
+        if (this.availablePieces.length === 0) {
+            return true;
+        }
+        
+        // Получаем список свободных клеток для оптимизации
+        const freeCells = this.getFreeCells();
+        
+        // Проверяем каждую доступную фигуру
+        for (let piece of this.availablePieces) {
+            // Проверяем только свободные клетки как потенциальные позиции
+            for (let cell of freeCells) {
+                if (this.canPlacePiece(piece, cell.x, cell.y)) {
+                    return true; // Найдена хотя бы одна доступная позиция
+                }
+            }
+        }
+        
+        return false; // Нет доступных ходов
+    }
+    
+    // Получает список свободных клеток на доске
+    getFreeCells() {
+        const freeCells = [];
+        for (let y = 0; y < this.BOARD_SIZE; y++) {
+            for (let x = 0; x < this.BOARD_SIZE; x++) {
+                if (this.board[y][x] === 0) {
+                    freeCells.push({ x, y });
+                }
+            }
+        }
+        return freeCells;
+    }
+    
+    // Проверяет условия окончания игры
+    checkGameOver() {
+        if (!this.gameRunning) {
+            return; // Игра уже окончена
+        }
+        
+        // Проверяем, есть ли доступные ходы
+        if (!this.hasAvailableMoves()) {
+            this.gameOver();
+        }
+    }
+    
+    // Подсчитывает количество доступных ходов
+    countAvailableMoves() {
+        if (this.availablePieces.length === 0) {
+            return 0;
+        }
+        
+        let moveCount = 0;
+        const freeCells = this.getFreeCells();
+        
+        for (let piece of this.availablePieces) {
+            for (let cell of freeCells) {
+                if (this.canPlacePiece(piece, cell.x, cell.y)) {
+                    moveCount++;
+                }
+            }
+        }
+        
+        return moveCount;
+    }
+    
     getCurrentColor() {
         if (document.body.classList.contains('pink-theme')) {
             return '#e91e63';
         } else if (document.body.classList.contains('blue-theme')) {
             return '#2196f3';
         }
-        return '#e74c3c';
+        return '#007AFF'; // Синий цвет в стиле iOS по умолчанию
     }
     
     drawWithPreview(previewX, previewY, canPlace = true) {
@@ -929,15 +990,12 @@ class MobileSudokuTetris {
     }
     
     drawSudokuGrid() {
-        this.ctx.strokeStyle = '#4a5568';
+        this.ctx.strokeStyle = '#e5e5e5';
         this.ctx.lineWidth = 1;
         
-        // Рисуем все линии
+        // Рисуем все линии одинаковой толщины (обычная сетка)
         for (let i = 0; i <= this.BOARD_SIZE; i++) {
             const pos = i * this.CELL_SIZE;
-            
-            // Толстые линии для границ квадратов 3x3
-            this.ctx.lineWidth = (i % 3 === 0) ? 3 : 1;
             
             // Вертикальные линии
             this.ctx.beginPath();
@@ -968,10 +1026,9 @@ class MobileSudokuTetris {
     }
     
     updateUI() {
-        document.getElementById('score').textContent = this.score;
-        document.getElementById('level').textContent = this.level;
-        document.getElementById('lines').textContent = this.lines;
+        document.getElementById('levelDisplay').textContent = this.level;
         document.getElementById('record').textContent = this.record;
+        document.getElementById('currentScore').textContent = this.score;
     }
     
     clearBoard() {
@@ -989,19 +1046,39 @@ class MobileSudokuTetris {
         // Проверяем рекорд
         const isNewRecord = this.saveRecord(this.score);
         
-        document.getElementById('finalScore').textContent = this.score;
+        const gameOverElement = document.getElementById('gameOver');
         
-        // Показываем сообщение о новом рекорде
+        // Обновляем интерфейс в зависимости от того, установлен ли новый рекорд
         if (isNewRecord) {
-            const gameOverElement = document.getElementById('gameOver');
             gameOverElement.innerHTML = `
                 <h2>🎉 Новый рекорд!</h2>
-                <p>Поздравляем! Вы установили новый рекорд: <span id="finalScore">${this.score}</span></p>
-                <button onclick="restartGame()">Играть снова</button>
+                <p>Поздравляем! Вы установили новый рекорд:</p>
+                <div class="final-score">${this.score}</div>
+                <p class="record-info">Предыдущий рекорд: ${this.record - this.score}</p>
+                <button id="restartGameBtn">Играть снова</button>
+            `;
+        } else {
+            gameOverElement.innerHTML = `
+                <h2>Игра окончена!</h2>
+                <p>Ваш результат:</p>
+                <div class="final-score">${this.score}</div>
+                <p class="record-info">Рекорд: ${this.record}</p>
+                <button id="restartGameBtn">Играть снова</button>
             `;
         }
         
-        document.getElementById('gameOver').style.display = 'block';
+        // Добавляем обработчик события для кнопки
+        const restartBtn = document.getElementById('restartGameBtn');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+                this.restart();
+            });
+        }
+        
+        gameOverElement.style.display = 'block';
+        
+        // Обновляем отображение рекорда в интерфейсе
+        this.updateUI();
     }
     
     restart() {
@@ -1027,9 +1104,11 @@ class MobileSudokuTetris {
 }
 
 // Глобальные функции для HTML
-function restartGame() {
-    game.restart();
-}
+window.restartGame = function() {
+    if (window.game) {
+        window.game.restart();
+    }
+};
 
 // Theme switching functionality
 class ThemeManager {
@@ -1083,7 +1162,14 @@ class ThemeManager {
             window.game.tetrisPieces.forEach(piece => {
                 piece.color = color;
             });
+            // Обновляем цвета доступных фигур
+            if (window.game.availablePieces) {
+                window.game.availablePieces.forEach(piece => {
+                    piece.color = color;
+                });
+            }
             window.game.draw();
+            window.game.renderPieces(false);
         }
     }
 }
@@ -1093,5 +1179,6 @@ let game;
 let themeManager;
 window.addEventListener('load', () => {
     game = new MobileSudokuTetris();
+    window.game = game; // Делаем доступным глобально
     themeManager = new ThemeManager();
 });

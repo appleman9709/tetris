@@ -9,20 +9,32 @@
 </head>
 <body>
     <div class="game-container">
-        <header>
-            <h1>Релакс для Жены</h1>
-            <div class="game-info">
-                <div class="info-row">
-                    <div class="score">Очки: <span id="score">0</span></div>
-                    <div class="level">Уровень: <span id="level">1</span></div>
-                    <div class="lines">Линии: <span id="lines">0</span></div>
+        <div class="top-header">
+            <div class="header-left">
+                <button class="back-button" id="backBtn">←</button>
+                <div class="level-display" id="levelDisplay">1</div>
+            </div>
+            <div class="header-right">
+                <button class="header-icon" id="themeToggle" title="Переключить тему">🎨</button>
+                <button class="header-icon" id="settingsBtn" title="Настройки">⚙️</button>
+                <div class="record-section">
+                    <div class="record-label">All Time</div>
+                    <div class="record-value">
+                        <span class="trophy-icon">🏆</span>
+                        <span id="record">0</span>
+                    </div>
                 </div>
             </div>
-        </header>
+        </div>
         
-        <div class="record">🏆 <span class="record-label">За все время:</span> <span id="record">0</span></div>
+        <div class="game-title">
+            <h1>Релакс для Жены</h1>
+        </div>
         
         <div class="game-area">
+            <div class="score-display">
+                <div class="current-score" id="currentScore">0</div>
+            </div>
             <div class="game-board">
                 <canvas id="gameCanvas"></canvas>
             </div>
@@ -34,17 +46,8 @@
             </div>
         </div>
         
-        <div class="top-controls">
-            <button id="themeToggle" class="retro-btn" title="Переключить тему">🎨</button>
-            <button class="retro-btn" id="saveBtn" title="Сохранить игру">💾</button>
-            <button class="retro-btn" id="restartBtn" title="Перезапуск">🔄</button>
-            <button class="retro-btn" id="clearBtn" title="Очистить">🗑️</button>
-        </div>
-        
         <div class="game-over" id="gameOver" style="display: none;">
-            <h2>Игра окончена!</h2>
-            <p>Финальный счет: <span id="finalScore">0</span></p>
-            <button onclick="restartGame()">Играть снова</button>
+            <!-- Контент генерируется динамически в JavaScript -->
         </div>
     </div>
     
