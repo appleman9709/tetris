@@ -278,6 +278,30 @@ class MobileSudokuTetris {
         
         this.availablePieces = [];
         
+        // Комплименты для жены
+        this.compliments = [
+            "Ты самая красивая жена на свете! 💕",
+            "Твоя улыбка делает мой день лучше! 😊",
+            "Ты невероятно умная и талантливая! 🧠✨",
+            "С тобой каждый день - это праздник! 🎉",
+            "Ты моя самая любимая и дорогая! 💖",
+            "Твоя доброта согревает мое сердце! ❤️",
+            "Ты самая лучшая мама и жена! 👩‍👧‍👦",
+            "Твоя красота завораживает! 🌟",
+            "С тобой я чувствую себя самым счастливым! 😍",
+            "Ты мой ангел-хранитель! 👼",
+            "Твоя мудрость помогает мне во всем! 🦉",
+            "Ты самая заботливая и нежная! 🤗",
+            "Твоя любовь - это мой дом! 🏠💕",
+            "Ты вдохновляешь меня каждый день! 💫",
+            "Твоя красота не только внешняя, но и внутренняя! 🌸",
+            "С тобой я могу все! 💪❤️",
+            "Ты мое солнышко в пасмурный день! ☀️",
+            "Твоя поддержка значит для меня все! 🤝",
+            "Ты самая терпеливая и понимающая! 🙏",
+            "Твоя любовь делает меня лучше! 💝"
+        ];
+        
         this.init();
     }
     
@@ -857,14 +881,62 @@ class MobileSudokuTetris {
             }
         }
         
+        // Проверяем все 9 регионов 3x3 (как в классическом судоку)
+        const regionsToCheck = [
+            { startX: 0, startY: 0 },   // Верхний левый
+            { startX: 3, startY: 0 },   // Верхний центральный
+            { startX: 6, startY: 0 },   // Верхний правый
+            { startX: 0, startY: 3 },   // Средний левый
+            { startX: 3, startY: 3 },   // Центральный
+            { startX: 6, startY: 3 },   // Средний правый
+            { startX: 0, startY: 6 },   // Нижний левый
+            { startX: 3, startY: 6 },   // Нижний центральный
+            { startX: 6, startY: 6 }    // Нижний правый
+        ];
+        
+        for (let region of regionsToCheck) {
+            if (this.isRegionFilled(region.startX, region.startY)) {
+                this.clearRegion(region.startX, region.startY);
+                linesCleared++;
+            }
+        }
+        
         if (linesCleared > 0) {
+            const oldLevel = this.level;
             this.lines += linesCleared;
             this.score += linesCleared * 10 * this.level;
-            this.level = Math.floor(this.lines / 10) + 1;
+            this.level = Math.floor(this.lines / 20) + 1; // Увеличиваем с 10 до 20 линий для следующего уровня
+            
+            // Проверяем, достигли ли нового уровня
+            if (this.level > oldLevel) {
+                this.showLevelUpCompliment();
+            }
+            
             this.updateUI();
             
             // Сохраняем игру после очистки линий
             this.saveGameState();
+        }
+    }
+    
+    // Проверяет, заполнен ли 3x3 регион
+    isRegionFilled(startX, startY) {
+        for (let y = startY; y < startY + 3; y++) {
+            for (let x = startX; x < startX + 3; x++) {
+                if (this.board[y][x] !== 1) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    // Очищает 3x3 регион
+    clearRegion(startX, startY) {
+        for (let y = startY; y < startY + 3; y++) {
+            for (let x = startX; x < startX + 3; x++) {
+                this.board[y][x] = 0;
+            }
         }
     }
     
@@ -990,6 +1062,9 @@ class MobileSudokuTetris {
     }
     
     drawSudokuGrid() {
+        // Сначала рисуем фоновые цвета для регионов 2, 4, 5, 6, 8
+        this.drawRegionBackgrounds();
+        
         this.ctx.strokeStyle = '#e5e5e5';
         this.ctx.lineWidth = 1;
         
@@ -1011,6 +1086,27 @@ class MobileSudokuTetris {
         }
     }
     
+    drawRegionBackgrounds() {
+        this.ctx.fillStyle = '#e9eef5';
+        
+        // Регионы для заливки: 2, 4, 5, 6, 8
+        const regionsToFill = [
+            { startX: 3, startY: 0 },   // Регион 2: Верхний центральный
+            { startX: 0, startY: 3 },   // Регион 4: Средний левый
+            { startX: 3, startY: 3 },   // Регион 5: Центральный
+            { startX: 6, startY: 3 },   // Регион 6: Средний правый
+            { startX: 3, startY: 6 }     // Регион 8: Нижний центральный
+        ];
+        
+        for (let region of regionsToFill) {
+            const x = region.startX * this.CELL_SIZE;
+            const y = region.startY * this.CELL_SIZE;
+            const size = 3 * this.CELL_SIZE;
+            
+            this.ctx.fillRect(x, y, size, size);
+        }
+    }
+    
     drawBoard() {
         const color = this.getCurrentColor();
         
@@ -1029,6 +1125,52 @@ class MobileSudokuTetris {
         document.getElementById('levelDisplay').textContent = this.level;
         document.getElementById('record').textContent = this.record;
         document.getElementById('currentScore').textContent = this.score;
+    }
+    
+    // Показывает комплимент при достижении нового уровня
+    showLevelUpCompliment() {
+        // Выбираем случайный комплимент
+        const randomCompliment = this.compliments[Math.floor(Math.random() * this.compliments.length)];
+        
+        // Создаем элемент для комплимента
+        const complimentElement = document.createElement('div');
+        complimentElement.className = 'level-up-compliment';
+        complimentElement.innerHTML = `
+            <div class="compliment-content">
+                <div class="level-badge">Уровень ${this.level}! 🎉</div>
+                <div class="compliment-text">${randomCompliment}</div>
+                <button class="compliment-close">Продолжить игру</button>
+            </div>
+        `;
+        
+        // Добавляем в DOM
+        document.body.appendChild(complimentElement);
+        
+        // Анимация появления
+        setTimeout(() => {
+            complimentElement.classList.add('show');
+        }, 100);
+        
+        // Обработчик закрытия
+        const closeBtn = complimentElement.querySelector('.compliment-close');
+        closeBtn.addEventListener('click', () => {
+            complimentElement.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(complimentElement);
+            }, 300);
+        });
+        
+        // Автоматическое закрытие через 5 секунд
+        setTimeout(() => {
+            if (document.body.contains(complimentElement)) {
+                complimentElement.classList.remove('show');
+                setTimeout(() => {
+                    if (document.body.contains(complimentElement)) {
+                        document.body.removeChild(complimentElement);
+                    }
+                }, 300);
+            }
+        }, 5000);
     }
     
     clearBoard() {
