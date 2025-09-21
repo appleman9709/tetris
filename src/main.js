@@ -557,7 +557,7 @@ class MobileSudokuTetris {
                     const pixelX = x * cellSize;
                     const pixelY = y * cellSize;
                     this.drawGlassCell(ctx, pixelX, pixelY, cellSize, baseColor, {
-                        glow: true,
+                        depth: 0.24,
                         alpha: 0.92
                     });
                 }
@@ -1098,8 +1098,8 @@ class MobileSudokuTetris {
 
         const baseColor = canPlace ? this.getCurrentColor() : '#ff4d4f';
         const previewOptions = canPlace
-            ? { alpha: 0.65, glow: true, outlineColor: this.lightenColor(baseColor, 0.5) }
-            : { alpha: 0.55, outlineColor: '#ff4d4f' };
+            ? { alpha: 0.6, depth: 0.18, outlineColor: this.lightenColor(baseColor, 0.45) }
+            : { alpha: 0.5, depth: 0.18, outlineColor: '#ff4d4f' };
 
         for (let py = 0; py < this.draggedPiece.shape.length; py++) {
             for (let px = 0; px < this.draggedPiece.shape[py].length; px++) {
@@ -1226,7 +1226,7 @@ class MobileSudokuTetris {
                     const pixelX = x * this.CELL_SIZE;
                     const pixelY = y * this.CELL_SIZE;
                     this.drawGlassCell(this.ctx, pixelX, pixelY, this.CELL_SIZE, baseColor, {
-                        glow: true,
+                        depth: 0.2,
                         alpha: 0.95
                     });
                 }
@@ -1335,57 +1335,62 @@ class MobileSudokuTetris {
 
     drawGlassCell(ctx, pixelX, pixelY, size, baseColor, options = {}) {
         const alpha = options.alpha ?? 1;
-        const radius = Math.max(4, size * 0.22);
+        const depth = options.depth ?? 0.2;
+        const radius = Math.max(3, size * 0.18);
+        const glow = options.glow ?? false;
 
         ctx.save();
 
-        if (options.glow) {
-            ctx.shadowColor = this.addAlpha(this.lightenColor(baseColor, 0.3), 0.35 * alpha);
-            ctx.shadowBlur = size * 0.65;
-        } else {
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-        }
-
-        const bodyGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
-        bodyGradient.addColorStop(0, this.addAlpha(this.lightenColor(baseColor, 0.45), 0.82 * alpha));
-        bodyGradient.addColorStop(0.5, this.addAlpha(baseColor, 0.78 * alpha));
-        bodyGradient.addColorStop(1, this.addAlpha(this.darkenColor(baseColor, 0.3), 0.9 * alpha));
+        ctx.shadowColor = this.addAlpha(this.darkenColor(baseColor, 0.35), (glow ? 0.22 : 0.15) * alpha);
+        ctx.shadowBlur = glow ? size * 0.2 : size * 0.12;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = size * 0.09;
 
         ctx.beginPath();
         this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
+
+        const topColor = this.lightenColor(baseColor, 0.22);
+        const midColor = baseColor;
+        const bottomColor = this.darkenColor(baseColor, depth);
+        const bodyGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
+        bodyGradient.addColorStop(0, this.addAlpha(topColor, alpha));
+        bodyGradient.addColorStop(0.55, this.addAlpha(midColor, alpha));
+        bodyGradient.addColorStop(1, this.addAlpha(bottomColor, alpha));
+
         ctx.fillStyle = bodyGradient;
         ctx.fill();
 
         ctx.shadowBlur = 0;
-        ctx.shadowColor = 'transparent';
+        ctx.shadowOffsetY = 0;
 
         ctx.beginPath();
         this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
         const outlineColor = options.outlineColor
             ? this.addAlpha(options.outlineColor, 0.85 * alpha)
-            : this.addAlpha(this.lightenColor(baseColor, 0.55), 0.6 * alpha);
-        ctx.lineWidth = 1.4;
+            : this.addAlpha(this.darkenColor(baseColor, 0.45), 0.38 * alpha);
         ctx.strokeStyle = outlineColor;
+        ctx.lineWidth = 1.05;
         ctx.stroke();
 
-        const shineHeight = size * 0.42;
-        const shineGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + shineHeight);
-        shineGradient.addColorStop(0, this.addAlpha('#ffffff', 0.8 * alpha));
-        shineGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+        ctx.save();
         ctx.beginPath();
-        this.roundRectPath(ctx, pixelX + size * 0.18, pixelY + size * 0.1, size - size * 0.36, shineHeight, radius * 0.6);
-        ctx.fillStyle = shineGradient;
-        ctx.fill();
+        this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
+        ctx.clip();
 
-        const innerGradient = ctx.createLinearGradient(pixelX, pixelY + size, pixelX, pixelY);
-        innerGradient.addColorStop(0, this.addAlpha('#0f172a', 0.18 * alpha));
-        innerGradient.addColorStop(1, this.addAlpha('#0f172a', 0));
-        ctx.beginPath();
-        this.roundRectPath(ctx, pixelX + size * 0.12, pixelY + size * 0.52, size - size * 0.24, size * 0.32, radius * 0.35);
-        ctx.fillStyle = innerGradient;
-        ctx.fill();
+        const highlightGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
+        highlightGradient.addColorStop(0, this.addAlpha('#ffffff', 0.28 * alpha));
+        highlightGradient.addColorStop(0.4, this.addAlpha('#ffffff', 0.08 * alpha));
+        highlightGradient.addColorStop(0.6, this.addAlpha('#ffffff', 0));
+        ctx.fillStyle = highlightGradient;
+        ctx.fillRect(pixelX, pixelY, size, size);
 
+        const shadowGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
+        shadowGradient.addColorStop(0.55, this.addAlpha('#000000', 0));
+        shadowGradient.addColorStop(1, this.addAlpha('#000000', 0.12 * alpha));
+        ctx.fillStyle = shadowGradient;
+        ctx.fillRect(pixelX, pixelY, size, size);
+
+        ctx.restore();
         ctx.restore();
     }
 
