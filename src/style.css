@@ -6,25 +6,26 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #ffffff;
+    background: radial-gradient(circle at 20% 10%, #1e293b 0%, #0f172a 45%, #020617 100%);
     height: 100vh;
     margin: 0;
     padding: 0;
-    color: #333333;
+    color: #e2e8f0;
     overflow: hidden;
 }
 
 .game-container {
-    background: #ffffff;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
+    background: rgba(15, 23, 42, 0.35);
+    border-radius: 32px;
+    padding: 24px 20px;
+    box-shadow: 0 24px 55px rgba(2, 6, 23, 0.55);
     max-width: 100%;
     width: 100%;
     height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
+    backdrop-filter: blur(26px);
 }
 
 /* Новый заголовок в стиле изображения */
@@ -32,10 +33,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
-    background: #ffffff;
-    border-bottom: 1px solid #e5e5e5;
+    padding: 18px 24px;
+    background: rgba(148, 163, 184, 0.12);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
     flex-shrink: 0;
+    backdrop-filter: blur(24px);
+    box-shadow: 0 18px 35px rgba(2, 6, 23, 0.35);
+    margin-bottom: 24px;
 }
 
 .header-left {
@@ -44,26 +49,31 @@ body {
 }
 
 .back-button {
-    background: none;
-    border: none;
-    padding: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    padding: 8px 12px;
     cursor: pointer;
-    color: #007AFF;
+    color: #f8fafc;
     font-size: 18px;
     margin-right: 16px;
+    border-radius: 12px;
+    backdrop-filter: blur(18px);
+    transition: all 0.2s ease;
 }
 
 .level-display {
     font-size: 18px;
     font-weight: 600;
-    color: #000000;
+    color: #f8fafc;
+    text-shadow: 0 4px 10px rgba(2, 6, 23, 0.4);
 }
 
 .header-title {
     font-size: 16px;
     font-weight: 500;
-    color: #000000;
+    color: #f1f5f9;
     margin-left: 8px;
+    text-shadow: 0 3px 8px rgba(2, 6, 23, 0.45);
 }
 
 .header-right {
@@ -73,12 +83,28 @@ body {
 }
 
 .header-icon {
-    background: none;
-    border: none;
-    padding: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    padding: 8px 12px;
     cursor: pointer;
-    color: #007AFF;
+    color: #f8fafc;
     font-size: 18px;
+    border-radius: 12px;
+    backdrop-filter: blur(18px);
+    transition: all 0.2s ease;
+}
+
+.back-button:hover,
+.header-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.35);
+    border-color: rgba(226, 232, 240, 0.35);
+}
+
+.back-button:active,
+.header-icon:active {
+    transform: translateY(1px);
+    box-shadow: 0 8px 20px rgba(2, 6, 23, 0.28);
 }
 
 .record-section {
@@ -90,7 +116,7 @@ body {
 
 .record-label {
     font-size: 12px;
-    color: #666666;
+    color: rgba(226, 232, 240, 0.72);
     margin-bottom: 2px;
 }
 
@@ -100,7 +126,8 @@ body {
     gap: 4px;
     font-size: 14px;
     font-weight: 600;
-    color: #000000;
+    color: #f8fafc;
+    text-shadow: 0 3px 8px rgba(2, 6, 23, 0.45);
 }
 
 .trophy-icon {
@@ -129,6 +156,10 @@ body {
 }
 
 
+body.pink-theme {
+    background: radial-gradient(circle at 20% 10%, #4c1d4f 0%, #2a0c2d 45%, #16081f 100%);
+}
+
 /* Pink theme - only UI elements */
 body.pink-theme .game-info > div > div {
     background: linear-gradient(145deg, #e91e63, #ad1457);
@@ -147,10 +178,11 @@ body.pink-theme .record-label {
 }
 
 body.pink-theme #gameCanvas {
-    border-color: #e91e63;
+    border-color: rgba(233, 30, 99, 0.45);
     box-shadow: 
-        0 0 15px rgba(233, 30, 99, 0.4),
-        inset 0 0 10px rgba(0, 0, 0, 0.3);
+        inset 0 1px 0 rgba(255, 255, 255, 0.38),
+        inset 0 -22px 32px rgba(166, 21, 72, 0.45),
+        0 26px 45px rgba(166, 21, 72, 0.45);
 }
 
 body.pink-theme .control-btn {
@@ -167,6 +199,10 @@ body.pink-theme .retro-btn {
     text-shadow: 
         2px 2px 0px #4a0e2a,
         0 0 8px rgba(255, 105, 180, 0.8);
+}
+
+body.blue-theme {
+    background: radial-gradient(circle at 20% 10%, #1e3a8a 0%, #0f172a 45%, #020617 100%);
 }
 
 /* Blue theme - only UI elements */
@@ -187,10 +223,11 @@ body.blue-theme .record-label {
 }
 
 body.blue-theme #gameCanvas {
-    border-color: #2196f3;
+    border-color: rgba(33, 150, 243, 0.45);
     box-shadow: 
-        0 0 15px rgba(33, 150, 243, 0.4),
-        inset 0 0 10px rgba(0, 0, 0, 0.3);
+        inset 0 1px 0 rgba(255, 255, 255, 0.32),
+        inset 0 -22px 32px rgba(30, 64, 175, 0.45),
+        0 26px 45px rgba(30, 64, 175, 0.4);
 }
 
 body.blue-theme .control-btn {
@@ -229,28 +266,34 @@ body.blue-theme .retro-btn {
 .current-score {
     font-size: 2.5em;
     font-weight: 700;
-    color: #000000;
+    color: #f8fafc;
     text-align: center;
     letter-spacing: 1px;
+    text-shadow: 0 10px 22px rgba(2, 6, 23, 0.45);
 }
 
 .game-board {
-    background: transparent;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 28px;
+    padding: 18px;
+    box-shadow: 0 28px 45px rgba(2, 6, 23, 0.55);
     width: 100%;
     max-width: 400px;
     flex-shrink: 0;
     display: flex;
     justify-content: center;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    backdrop-filter: blur(24px);
 }
 
 #gameCanvas {
-    border: none;
-    border-radius: 0;
-    background: #ffffff;
-    box-shadow: none;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 22px;
+    background: linear-gradient(155deg, rgba(148, 163, 184, 0.22) 0%, rgba(15, 23, 42, 0.32) 100%);
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -18px 28px rgba(15, 23, 42, 0.35),
+        0 22px 40px rgba(2, 6, 23, 0.55);
     width: 100%;
     height: auto;
     max-width: 360px;
@@ -259,74 +302,80 @@ body.blue-theme .retro-btn {
 }
 
 .pieces-panel {
-    background: transparent;
-    border-radius: 0;
-    padding: 0;
-    box-shadow: none;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 28px;
+    padding: 18px;
+    box-shadow: 0 24px 40px rgba(2, 6, 23, 0.45);
     width: 100%;
     max-width: 400px;
     flex-shrink: 0;
     display: flex;
     justify-content: center;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    backdrop-filter: blur(20px);
 }
 
 .pieces-container {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
     margin-top: 0;
-    max-width: 300px;
+    max-width: 320px;
+    width: 100%;
+    justify-items: center;
 }
 
 .piece-item {
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    padding: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 16px;
+    padding: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     touch-action: none;
     user-select: none;
-    box-shadow: none;
+    box-shadow: 0 16px 28px rgba(2, 6, 23, 0.35);
+    backdrop-filter: blur(18px);
 }
 
 .piece-item:hover {
-    transform: scale(1.05);
-    box-shadow: none;
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 22px 38px rgba(2, 6, 23, 0.45);
 }
 
 .piece-item:active {
-    transform: scale(0.95);
-    background: transparent;
-    box-shadow: none;
+    transform: translateY(2px) scale(0.97);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.3);
 }
 
 .piece-item.dragging {
-    opacity: 0.9;
-    transform: translateY(-16px) scale(1.12);
+    opacity: 0.92;
+    transform: translateY(-18px) scale(1.08);
     z-index: 1000;
-    box-shadow: 0 14px 20px rgba(0, 0, 0, 0.18);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 40px rgba(2, 6, 23, 0.55);
 }
 
 .piece-item.selected {
-    transform: translateY(-4px) scale(1.05);
+    transform: translateY(-6px) scale(1.06);
     box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.15),
-        0 2px 6px rgba(0, 0, 0, 0.1);
+        0 24px 42px rgba(59, 130, 246, 0.45),
+        0 10px 24px rgba(2, 6, 23, 0.4);
     z-index: 100;
     transition: all 0.2s ease;
-    border: 2px solid #007AFF;
-    border-radius: 8px;
-    background: rgba(0, 122, 255, 0.1);
+    border: 2px solid rgba(191, 219, 254, 0.9);
+    border-radius: 16px;
+    background: rgba(59, 130, 246, 0.16);
 }
 
 .piece-item.selected .piece-canvas {
-    filter: brightness(1.1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    filter: brightness(1.05) drop-shadow(0 16px 26px rgba(59, 130, 246, 0.35));
 }
 
 .piece-item:hover {
-    transform: scale(1.05);
-    box-shadow: none;
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 22px 38px rgba(2, 6, 23, 0.45);
 }
 
 .piece-canvas {
@@ -334,6 +383,8 @@ body.blue-theme .retro-btn {
     height: auto;
     max-width: 100px;
     max-height: 100px;
+    filter: drop-shadow(0 14px 28px rgba(2, 6, 23, 0.45));
+    transition: filter 0.2s ease;
 }
 
 

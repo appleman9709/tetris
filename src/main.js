@@ -13,6 +13,11 @@ class MobileSudokuTetris {
         
         this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
         
+        this.MAX_BLOCKS_PER_PIECE = 4;
+        this.CLEAR_ANIMATION_DURATION = 360;
+        this.clearAnimations = [];
+        this.animationFrameId = null;
+        
         this.score = 0;
         this.level = 1;
         this.lines = 0;
@@ -280,6 +285,8 @@ class MobileSudokuTetris {
             }
         ];
         
+        this.tetrisPieces = this.tetrisPieces.filter(piece => this.countCubes(piece.shape) <= this.MAX_BLOCKS_PER_PIECE);
+        
         this.availablePieces = [];
         
         // Комплименты для жены
@@ -483,37 +490,24 @@ class MobileSudokuTetris {
     
     generatePieces() {
         this.availablePieces = [];
-        const piecesToGenerate = 5; // Количество фигур на панели
+        const piecesToGenerate = 5; // Number of pieces shown on the tray
         
-        // Фильтруем фигуры по размеру (максимум 5 кубиков)
-        const validPieces = this.tetrisPieces.filter(piece => {
-            const cubeCount = this.countCubes(piece.shape);
-            return cubeCount <= 5;
-        });
-        
-        // Дополнительная проверка - оставляем только "Длинная" из 5-кубиковых
-        const finalPieces = validPieces.filter(piece => {
-            const cubeCount = this.countCubes(piece.shape);
-            if (cubeCount === 5) {
-                return piece.id === 'LONG'; // Только длинная линия
-            }
-            return true; // Все остальные фигуры
-        });
-        
-        // Создаем все возможные варианты фигур с поворотами
         const allVariants = [];
-        finalPieces.forEach(piece => {
+        this.tetrisPieces.forEach(piece => {
             const variants = this.createShapeVariants(piece);
             allVariants.push(...variants);
         });
         
         for (let i = 0; i < piecesToGenerate; i++) {
+            if (allVariants.length === 0) {
+                break;
+            }
             const randomIndex = Math.floor(Math.random() * allVariants.length);
             const piece = JSON.parse(JSON.stringify(allVariants[randomIndex]));
             piece.uniqueId = `piece_${i}_${Date.now()}`;
             this.availablePieces.push(piece);
         }
-        
+
         this.renderPieces(true); // С анимацией для новых фигур
         
         // Проверяем условия окончания игры после генерации новых фигур
@@ -555,20 +549,22 @@ class MobileSudokuTetris {
     }
     
     drawPieceOnCanvas(ctx, piece, cellSize) {
-        ctx.fillStyle = piece.color;
-        ctx.strokeStyle = '#4a5568';
-        ctx.lineWidth = 1;
-        
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        const baseColor = piece.color || this.getCurrentColor();
         for (let y = 0; y < piece.shape.length; y++) {
             for (let x = 0; x < piece.shape[y].length; x++) {
                 if (piece.shape[y][x]) {
-                    ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
-                    ctx.strokeRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+                    const pixelX = x * cellSize;
+                    const pixelY = y * cellSize;
+                    this.drawGlassCell(ctx, pixelX, pixelY, cellSize, baseColor, {
+                        glow: true,
+                        alpha: 0.92
+                    });
                 }
             }
         }
     }
-    
+
     calculatePieceHeight(piece) {
         if (!piece || !piece.shape) {
             return 0;
@@ -909,27 +905,23 @@ class MobileSudokuTetris {
     }
     
     checkLines() {
-        let linesCleared = 0;
-        
-        // Проверяем строки
-        for (let y = 0; y < this.BOARD_SIZE; y++) {
+        const rowsToClear = [];
+        const columnsToClear = [];
+        const regionsToClear = [];
+        const size = this.BOARD_SIZE;
+
+        for (let y = 0; y < size; y++) {
             if (this.board[y].every(cell => cell === 1)) {
-                this.board[y].fill(0);
-                linesCleared++;
+                rowsToClear.push(y);
             }
         }
-        
-        // Проверяем столбцы
-        for (let x = 0; x < this.BOARD_SIZE; x++) {
+
+        for (let x = 0; x < size; x++) {
             if (this.board.every(row => row[x] === 1)) {
-                for (let y = 0; y < this.BOARD_SIZE; y++) {
-                    this.board[y][x] = 0;
-                }
-                linesCleared++;
+                columnsToClear.push(x);
             }
         }
-        
-        // Проверяем все 9 регионов 3x3 (как в классическом судоку)
+
         const regionsToCheck = [
             { startX: 0, startY: 0 },   // Верхний левый
             { startX: 3, startY: 0 },   // Верхний центральный
@@ -941,33 +933,74 @@ class MobileSudokuTetris {
             { startX: 3, startY: 6 },   // Нижний центральный
             { startX: 6, startY: 6 }    // Нижний правый
         ];
-        
         for (let region of regionsToCheck) {
             if (this.isRegionFilled(region.startX, region.startY)) {
-                this.clearRegion(region.startX, region.startY);
-                linesCleared++;
+                regionsToClear.push(region);
             }
         }
-        
-        if (linesCleared > 0) {
-            const oldLevel = this.level;
-            this.lines += linesCleared;
-            this.score += linesCleared * 10 * this.level;
-            this.level = Math.floor(this.lines / 20) + 1; // Увеличиваем с 10 до 20 линий для следующего уровня
-            
-            // Проверяем, достигли ли нового уровня
-            if (this.level > oldLevel) {
-                this.showLevelUpCompliment();
-            }
-            
-            this.updateUI();
-            
-            // Сохраняем игру после очистки линий
-            this.saveGameState();
+
+        const linesCleared = rowsToClear.length + columnsToClear.length + regionsToClear.length;
+
+        if (linesCleared === 0) {
+            return;
         }
+
+        const cellsMap = new Map();
+        const rememberCell = (x, y) => {
+            const key = `${x},${y}`;
+            if (!cellsMap.has(key)) {
+                cellsMap.set(key, { x, y });
+            }
+        };
+
+        rowsToClear.forEach(y => {
+            for (let x = 0; x < size; x++) {
+                if (this.board[y][x] === 1) {
+                    rememberCell(x, y);
+                }
+            }
+        });
+
+        columnsToClear.forEach(x => {
+            for (let y = 0; y < size; y++) {
+                if (this.board[y][x] === 1) {
+                    rememberCell(x, y);
+                }
+            }
+        });
+
+        regionsToClear.forEach(region => {
+            for (let y = region.startY; y < region.startY + 3; y++) {
+                for (let x = region.startX; x < region.startX + 3; x++) {
+                    if (this.board[y][x] === 1) {
+                        rememberCell(x, y);
+                    }
+                }
+            }
+        });
+
+        const clearedCells = Array.from(cellsMap.values());
+        clearedCells.forEach(({ x, y }) => {
+            this.board[y][x] = 0;
+        });
+
+        if (clearedCells.length) {
+            this.triggerClearAnimation(clearedCells);
+        }
+
+        const oldLevel = this.level;
+        this.lines += linesCleared;
+        this.score += linesCleared * 10 * this.level;
+        this.level = Math.floor(this.lines / 20) + 1;
+
+        if (this.level > oldLevel) {
+            this.showLevelUpCompliment();
+        }
+
+        this.updateUI();
+        this.saveGameState();
     }
-    
-    // Проверяет, заполнен ли 3x3 регион
+
     isRegionFilled(startX, startY) {
         for (let y = startY; y < startY + 3; y++) {
             for (let x = startX; x < startX + 3; x++) {
@@ -980,15 +1013,6 @@ class MobileSudokuTetris {
     }
     
     // Очищает 3x3 регион
-    clearRegion(startX, startY) {
-        for (let y = startY; y < startY + 3; y++) {
-            for (let x = startX; x < startX + 3; x++) {
-                this.board[y][x] = 0;
-            }
-        }
-    }
-    
-    // Проверяет, есть ли доступные ходы для всех фигур
     hasAvailableMoves() {
         // Если нет фигур, игра не окончена (будут сгенерированы новые)
         if (this.availablePieces.length === 0) {
@@ -1067,77 +1091,102 @@ class MobileSudokuTetris {
     
     drawWithPreview(previewX, previewY, canPlace = true) {
         this.draw();
-        
-        if (this.draggedPiece) {
-            // Устанавливаем цвет в зависимости от возможности размещения
-            if (canPlace) {
-                this.ctx.fillStyle = this.draggedPiece.color;
-                this.ctx.globalAlpha = 0.7;
-            } else {
-                this.ctx.fillStyle = '#ff4444'; // Красный цвет когда нельзя поставить
-                this.ctx.globalAlpha = 0.5;
-            }
-            
-            for (let py = 0; py < this.draggedPiece.shape.length; py++) {
-                for (let px = 0; px < this.draggedPiece.shape[py].length; px++) {
-                    if (this.draggedPiece.shape[py][px]) {
-                        const x = (previewX + px) * this.CELL_SIZE;
-                        const y = (previewY + py) * this.CELL_SIZE;
-                        
-                        this.ctx.fillRect(x + 1, y + 1, this.CELL_SIZE - 2, this.CELL_SIZE - 2);
-                        
-                        // Добавляем обводку для лучшей видимости
-                        this.ctx.strokeStyle = canPlace ? '#4a5568' : '#ff0000';
-                        this.ctx.lineWidth = 1;
-                        this.ctx.strokeRect(x + 1, y + 1, this.CELL_SIZE - 2, this.CELL_SIZE - 2);
+
+        if (!this.draggedPiece) {
+            return;
+        }
+
+        const baseColor = canPlace ? this.getCurrentColor() : '#ff4d4f';
+        const previewOptions = canPlace
+            ? { alpha: 0.65, glow: true, outlineColor: this.lightenColor(baseColor, 0.5) }
+            : { alpha: 0.55, outlineColor: '#ff4d4f' };
+
+        for (let py = 0; py < this.draggedPiece.shape.length; py++) {
+            for (let px = 0; px < this.draggedPiece.shape[py].length; px++) {
+                if (this.draggedPiece.shape[py][px]) {
+                    const x = (previewX + px) * this.CELL_SIZE;
+                    const y = (previewY + py) * this.CELL_SIZE;
+                    this.drawGlassCell(this.ctx, x, y, this.CELL_SIZE, baseColor, previewOptions);
+
+                    if (!canPlace) {
+                        this.ctx.save();
+                        this.ctx.strokeStyle = this.addAlpha('#ff6b6b', 0.8);
+                        this.ctx.lineWidth = 2;
+                        this.ctx.beginPath();
+                        this.roundRectPath(this.ctx, x + 2, y + 2, this.CELL_SIZE - 4, this.CELL_SIZE - 4, Math.max(4, this.CELL_SIZE * 0.22));
+                        this.ctx.stroke();
+                        this.ctx.restore();
                     }
                 }
             }
-            
-            this.ctx.globalAlpha = 1;
         }
     }
-    
+
     draw() {
-        // Очищаем canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Рисуем сетку судоку
+
         this.drawSudokuGrid();
-        
-        // Рисуем размещенные фигуры
         this.drawBoard();
+        this.drawClearAnimations();
     }
-    
+
     drawSudokuGrid() {
-        // Сначала рисуем фоновые цвета для регионов 2, 4, 5, 6, 8
         this.drawRegionBackgrounds();
-        
-        this.ctx.strokeStyle = '#e5e5e5';
+
+        this.ctx.save();
+        this.ctx.strokeStyle = this.addAlpha('#cbd5f5', 0.4);
         this.ctx.lineWidth = 1;
-        
-        // Рисуем все линии одинаковой толщины (обычная сетка)
+
         for (let i = 0; i <= this.BOARD_SIZE; i++) {
-            const pos = i * this.CELL_SIZE;
-            
-            // Вертикальные линии
+            const pos = i * this.CELL_SIZE + 0.5;
+
             this.ctx.beginPath();
             this.ctx.moveTo(pos, 0);
             this.ctx.lineTo(pos, this.canvas.height);
             this.ctx.stroke();
-            
-            // Горизонтальные линии
+
             this.ctx.beginPath();
             this.ctx.moveTo(0, pos);
             this.ctx.lineTo(this.canvas.width, pos);
             this.ctx.stroke();
         }
+
+        this.ctx.lineWidth = 2.5;
+        this.ctx.strokeStyle = this.addAlpha('#e2e8f0', 0.5);
+
+        for (let i = 0; i <= this.BOARD_SIZE; i += 3) {
+            const pos = i * this.CELL_SIZE + 0.5;
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(pos, 0);
+            this.ctx.lineTo(pos, this.canvas.height);
+            this.ctx.stroke();
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, pos);
+            this.ctx.lineTo(this.canvas.width, pos);
+            this.ctx.stroke();
+        }
+
+        this.ctx.restore();
     }
-    
+
     drawRegionBackgrounds() {
-        this.ctx.fillStyle = '#e9eef5';
-        
-        // Регионы для заливки: 2, 4, 5, 6, 8
+        this.ctx.save();
+
+        const baseGradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
+        baseGradient.addColorStop(0, this.addAlpha('#1f2937', 0.52));
+        baseGradient.addColorStop(1, this.addAlpha('#0f172a', 0.68));
+        this.ctx.fillStyle = baseGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const highlightGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        highlightGradient.addColorStop(0, this.addAlpha('#ffffff', 0.15));
+        highlightGradient.addColorStop(0.35, this.addAlpha('#ffffff', 0.05));
+        highlightGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+        this.ctx.fillStyle = highlightGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
         const regionsToFill = [
             { startX: 3, startY: 0 },   // Регион 2: Верхний центральный
             { startX: 0, startY: 3 },   // Регион 4: Средний левый
@@ -1145,30 +1194,244 @@ class MobileSudokuTetris {
             { startX: 6, startY: 3 },   // Регион 6: Средний правый
             { startX: 3, startY: 6 }     // Регион 8: Нижний центральный
         ];
-        
+
         for (let region of regionsToFill) {
             const x = region.startX * this.CELL_SIZE;
             const y = region.startY * this.CELL_SIZE;
             const size = 3 * this.CELL_SIZE;
-            
+
+            const regionGradient = this.ctx.createRadialGradient(
+                x + size / 2,
+                y + size / 2,
+                this.CELL_SIZE * 0.35,
+                x + size / 2,
+                y + size / 2,
+                size * 0.95
+            );
+            regionGradient.addColorStop(0, this.addAlpha('#ffffff', 0.09));
+            regionGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+            this.ctx.fillStyle = regionGradient;
             this.ctx.fillRect(x, y, size, size);
         }
+
+        this.ctx.restore();
     }
-    
+
     drawBoard() {
-        const color = this.getCurrentColor();
-        
+        const baseColor = this.getCurrentColor();
+
         for (let y = 0; y < this.BOARD_SIZE; y++) {
             for (let x = 0; x < this.BOARD_SIZE; x++) {
                 if (this.board[y][x]) {
-                    this.ctx.fillStyle = color;
-                    this.ctx.fillRect(x * this.CELL_SIZE + 1, y * this.CELL_SIZE + 1, 
-                                    this.CELL_SIZE - 2, this.CELL_SIZE - 2);
+                    const pixelX = x * this.CELL_SIZE;
+                    const pixelY = y * this.CELL_SIZE;
+                    this.drawGlassCell(this.ctx, pixelX, pixelY, this.CELL_SIZE, baseColor, {
+                        glow: true,
+                        alpha: 0.95
+                    });
                 }
             }
         }
     }
-    
+
+    drawClearAnimations() {
+        if (!this.clearAnimations.length) {
+            return;
+        }
+
+        const baseColor = this.getCurrentColor();
+
+        this.clearAnimations.forEach(effect => {
+            const progress = effect.progress ?? 0;
+            effect.cells.forEach(cell => {
+                const pixelX = cell.x * this.CELL_SIZE;
+                const pixelY = cell.y * this.CELL_SIZE;
+                this.drawClearBurst(pixelX, pixelY, progress, baseColor);
+            });
+        });
+    }
+
+    drawClearBurst(pixelX, pixelY, progress, baseColor) {
+        const ctx = this.ctx;
+        const centerX = pixelX + this.CELL_SIZE / 2;
+        const centerY = pixelY + this.CELL_SIZE / 2;
+        const expansion = this.CELL_SIZE * (0.4 + 0.6 * progress);
+
+        const gradient = ctx.createRadialGradient(
+            centerX,
+            centerY,
+            this.CELL_SIZE * 0.1,
+            centerX,
+            centerY,
+            expansion
+        );
+        gradient.addColorStop(0, this.addAlpha('#ffffff', 0.75 * (1 - progress)));
+        gradient.addColorStop(0.6, this.addAlpha(this.lightenColor(baseColor, 0.3), 0.45 * (1 - progress)));
+        gradient.addColorStop(1, this.addAlpha(baseColor, 0));
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = gradient;
+        ctx.fillRect(pixelX - expansion, pixelY - expansion, this.CELL_SIZE + expansion * 2, this.CELL_SIZE + expansion * 2);
+
+        ctx.strokeStyle = this.addAlpha('#ffffff', 0.28 * (1 - progress));
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, this.CELL_SIZE * (0.55 + 0.4 * progress), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    triggerClearAnimation(cells) {
+        if (!cells || cells.length === 0) {
+            return;
+        }
+
+        const effect = {
+            cells: cells.map(cell => ({ x: cell.x, y: cell.y })),
+            startTime: performance.now(),
+            progress: 0
+        };
+
+        this.clearAnimations.push(effect);
+        this.draw();
+        this.ensureAnimationLoop();
+    }
+
+    ensureAnimationLoop() {
+        if (this.animationFrameId) {
+            return;
+        }
+
+        const step = (timestamp) => {
+            this.updateClearAnimationProgress(timestamp);
+            if (this.clearAnimations.length > 0) {
+                this.draw();
+                this.animationFrameId = requestAnimationFrame(step);
+            } else {
+                this.animationFrameId = null;
+            }
+        };
+
+        this.animationFrameId = requestAnimationFrame(step);
+    }
+
+    updateClearAnimationProgress(timestamp) {
+        const duration = this.CLEAR_ANIMATION_DURATION;
+
+        this.clearAnimations = this.clearAnimations.filter(effect => {
+            const elapsed = timestamp - effect.startTime;
+            const progress = Math.min(1, elapsed / duration);
+            effect.progress = progress;
+            return elapsed < duration;
+        });
+
+        if (this.clearAnimations.length === 0 && this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
+
+    drawGlassCell(ctx, pixelX, pixelY, size, baseColor, options = {}) {
+        const alpha = options.alpha ?? 1;
+        const radius = Math.max(4, size * 0.22);
+
+        ctx.save();
+
+        if (options.glow) {
+            ctx.shadowColor = this.addAlpha(this.lightenColor(baseColor, 0.3), 0.35 * alpha);
+            ctx.shadowBlur = size * 0.65;
+        } else {
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+        }
+
+        const bodyGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
+        bodyGradient.addColorStop(0, this.addAlpha(this.lightenColor(baseColor, 0.45), 0.82 * alpha));
+        bodyGradient.addColorStop(0.5, this.addAlpha(baseColor, 0.78 * alpha));
+        bodyGradient.addColorStop(1, this.addAlpha(this.darkenColor(baseColor, 0.3), 0.9 * alpha));
+
+        ctx.beginPath();
+        this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
+        ctx.fillStyle = bodyGradient;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+
+        ctx.beginPath();
+        this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
+        const outlineColor = options.outlineColor
+            ? this.addAlpha(options.outlineColor, 0.85 * alpha)
+            : this.addAlpha(this.lightenColor(baseColor, 0.55), 0.6 * alpha);
+        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = outlineColor;
+        ctx.stroke();
+
+        const shineHeight = size * 0.42;
+        const shineGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + shineHeight);
+        shineGradient.addColorStop(0, this.addAlpha('#ffffff', 0.8 * alpha));
+        shineGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+        ctx.beginPath();
+        this.roundRectPath(ctx, pixelX + size * 0.18, pixelY + size * 0.1, size - size * 0.36, shineHeight, radius * 0.6);
+        ctx.fillStyle = shineGradient;
+        ctx.fill();
+
+        const innerGradient = ctx.createLinearGradient(pixelX, pixelY + size, pixelX, pixelY);
+        innerGradient.addColorStop(0, this.addAlpha('#0f172a', 0.18 * alpha));
+        innerGradient.addColorStop(1, this.addAlpha('#0f172a', 0));
+        ctx.beginPath();
+        this.roundRectPath(ctx, pixelX + size * 0.12, pixelY + size * 0.52, size - size * 0.24, size * 0.32, radius * 0.35);
+        ctx.fillStyle = innerGradient;
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    roundRectPath(ctx, x, y, width, height, radius) {
+        const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+    }
+
+    hexToRgb(hex) {
+        let cleaned = hex.replace('#', '');
+        if (cleaned.length === 3) {
+            cleaned = cleaned.split('').map(char => char + char).join('');
+        }
+        const num = parseInt(cleaned, 16);
+        return {
+            r: (num >> 16) & 255,
+            g: (num >> 8) & 255,
+            b: num & 255
+        };
+    }
+
+    addAlpha(hex, alpha) {
+        const { r, g, b } = this.hexToRgb(hex);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    lightenColor(hex, amount = 0.2) {
+        const { r, g, b } = this.hexToRgb(hex);
+        const adjust = (channel) => Math.round(channel + (255 - channel) * amount);
+        return `#${[adjust(r), adjust(g), adjust(b)].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+    }
+
+    darkenColor(hex, amount = 0.2) {
+        const { r, g, b } = this.hexToRgb(hex);
+        const adjust = (channel) => Math.round(channel * (1 - amount));
+        return `#${[adjust(r), adjust(g), adjust(b)].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+    }
+
     updateUI() {
         document.getElementById('levelDisplay').textContent = this.level;
         document.getElementById('record').textContent = this.record;
