@@ -28,6 +28,7 @@ class MobileSudokuTetris {
         this.touchMoved = false;
         this.isTouchDragging = false;
         this.TOUCH_LIFT_BASE = this.CELL_SIZE * 0.85;
+        this.MIN_TOUCH_LIFT = this.CELL_SIZE * 0.3;
         this.touchLiftOffset = this.TOUCH_LIFT_BASE;
         
         // Состояние выбранной фигуры
@@ -599,7 +600,22 @@ class MobileSudokuTetris {
         const minLift = this.CELL_SIZE * 0.8;
         const maxLift = this.CELL_SIZE * 2.2;
         const clamped = Math.max(minLift, Math.min(rawLift, maxLift));
-        return Math.max(this.TOUCH_LIFT_BASE, clamped);
+        const sizedLift = Math.max(this.TOUCH_LIFT_BASE, clamped);
+        return Math.max(this.MIN_TOUCH_LIFT, sizedLift);
+    }
+
+    getEffectiveTouchLift(touchClientY, canvasRect) {
+        const fullLift = this.touchLiftOffset;
+        const distanceToBottom = this.canvas.height - (touchClientY - canvasRect.top);
+        const safeBuffer = this.CELL_SIZE * 0.25;
+        const minLift = this.MIN_TOUCH_LIFT;
+
+        if (distanceToBottom <= fullLift + safeBuffer) {
+            const maxLiftBySpace = Math.max(0, distanceToBottom - safeBuffer);
+            return Math.max(minLift, Math.min(fullLift, maxLiftBySpace));
+        }
+
+        return Math.max(minLift, fullLift);
     }
 
 
@@ -682,7 +698,8 @@ class MobileSudokuTetris {
         }
         
         const canvasX = touch.clientX - canvasRect.left;
-        const rawCanvasY = touch.clientY - canvasRect.top - this.touchLiftOffset;
+        const effectiveLift = this.getEffectiveTouchLift(touch.clientY, canvasRect);
+        const rawCanvasY = touch.clientY - canvasRect.top - effectiveLift;
         const adjustedCanvasY = Math.max(0, rawCanvasY);
         
         const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
@@ -699,12 +716,13 @@ class MobileSudokuTetris {
         const touch = e.changedTouches[0];
         const canvasRect = this.canvas.getBoundingClientRect();
         
-        const margin = 10;
-        if (touch.clientX >= canvasRect.left - margin && touch.clientX <= canvasRect.right + margin &&
-            touch.clientY >= canvasRect.top - margin && touch.clientY <= canvasRect.bottom + margin) {
+        const effectiveLift = this.getEffectiveTouchLift(touch.clientY, canvasRect);
+        const dynamicMargin = Math.max(10, effectiveLift + this.CELL_SIZE * 0.5);
+        if (touch.clientX >= canvasRect.left - dynamicMargin && touch.clientX <= canvasRect.right + dynamicMargin &&
+            touch.clientY >= canvasRect.top - dynamicMargin && touch.clientY <= canvasRect.bottom + dynamicMargin) {
             
             const canvasX = touch.clientX - canvasRect.left;
-            const rawCanvasY = touch.clientY - canvasRect.top - this.touchLiftOffset;
+            const rawCanvasY = touch.clientY - canvasRect.top - effectiveLift;
             const adjustedCanvasY = Math.max(0, rawCanvasY);
             
             const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
