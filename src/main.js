@@ -26,6 +26,9 @@ class MobileSudokuTetris {
         this.touchStartX = 0;
         this.touchStartY = 0;
         this.touchMoved = false;
+        this.isTouchDragging = false;
+        this.TOUCH_LIFT_BASE = this.CELL_SIZE * 0.85;
+        this.touchLiftOffset = this.TOUCH_LIFT_BASE;
         
         // Состояние выбранной фигуры
         this.selectedPiece = null;
@@ -565,6 +568,41 @@ class MobileSudokuTetris {
         }
     }
     
+    calculatePieceHeight(piece) {
+        if (!piece || !piece.shape) {
+            return 0;
+        }
+
+        let firstRow = -1;
+        let lastRow = -1;
+
+        for (let y = 0; y < piece.shape.length; y++) {
+            if (piece.shape[y].some(cell => cell)) {
+                if (firstRow === -1) {
+                    firstRow = y;
+                }
+                lastRow = y;
+            }
+        }
+
+        if (firstRow === -1) {
+            return 0;
+        }
+
+        return lastRow - firstRow + 1;
+    }
+
+    computeTouchLiftOffset(piece) {
+        const height = Math.max(1, this.calculatePieceHeight(piece));
+        const gap = this.CELL_SIZE * 0.2;
+        const rawLift = height * this.CELL_SIZE - gap;
+        const minLift = this.CELL_SIZE * 0.8;
+        const maxLift = this.CELL_SIZE * 2.2;
+        const clamped = Math.max(minLift, Math.min(rawLift, maxLift));
+        return Math.max(this.TOUCH_LIFT_BASE, clamped);
+    }
+
+
     setupEventListeners() {
         // События для canvas
         this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e));
@@ -608,12 +646,12 @@ class MobileSudokuTetris {
         const piece = this.availablePieces.find(p => p.uniqueId === pieceId);
         
         if (piece) {
-            // Выбираем фигуру при касании
             this.selectPiece(piece, pieceElement);
             
-            // Устанавливаем как перетаскиваемую фигуру
             this.draggedPiece = piece;
             this.isDragging = true;
+            this.isTouchDragging = true;
+            this.touchLiftOffset = this.computeTouchLiftOffset(piece);
             pieceElement.classList.add('dragging');
             
             const touch = e.touches[0];
@@ -623,7 +661,6 @@ class MobileSudokuTetris {
                 y: touch.clientY - rect.top
             };
             
-            // Сохраняем начальную позицию касания для предотвращения случайных срабатываний
             this.touchStartX = touch.clientX;
             this.touchStartY = touch.clientY;
             this.touchMoved = false;
@@ -638,22 +675,19 @@ class MobileSudokuTetris {
         const touch = e.touches[0];
         const canvasRect = this.canvas.getBoundingClientRect();
         
-        // Отмечаем, что касание сдвинулось
         const deltaX = Math.abs(touch.clientX - this.touchStartX);
         const deltaY = Math.abs(touch.clientY - this.touchStartY);
         if (deltaX > 5 || deltaY > 5) {
             this.touchMoved = true;
         }
         
-        // Вычисляем позицию на canvas
         const canvasX = touch.clientX - canvasRect.left;
-        const canvasY = touch.clientY - canvasRect.top;
+        const rawCanvasY = touch.clientY - canvasRect.top - this.touchLiftOffset;
+        const adjustedCanvasY = Math.max(0, rawCanvasY);
         
-        // Конвертируем в координаты сетки с проверкой границ
         const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
-        const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
+        const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(adjustedCanvasY / this.CELL_SIZE)));
         
-        // Всегда показываем полупрозрачную фигуру, независимо от возможности размещения
         this.drawWithPreview(gridX, gridY, this.canPlacePiece(this.draggedPiece, gridX, gridY));
         
         e.preventDefault();
@@ -665,36 +699,32 @@ class MobileSudokuTetris {
         const touch = e.changedTouches[0];
         const canvasRect = this.canvas.getBoundingClientRect();
         
-        // Проверяем, был ли тач над canvas (с небольшим запасом для лучшего UX)
-        const margin = 10; // Добавляем запас в 10px
+        const margin = 10;
         if (touch.clientX >= canvasRect.left - margin && touch.clientX <= canvasRect.right + margin &&
             touch.clientY >= canvasRect.top - margin && touch.clientY <= canvasRect.bottom + margin) {
             
             const canvasX = touch.clientX - canvasRect.left;
-            const canvasY = touch.clientY - canvasRect.top;
+            const rawCanvasY = touch.clientY - canvasRect.top - this.touchLiftOffset;
+            const adjustedCanvasY = Math.max(0, rawCanvasY);
             
-            // Используем Math.round вместо Math.floor для более точного позиционирования
-            // и добавляем проверку на границы
             const gridX = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasX / this.CELL_SIZE)));
-            const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(canvasY / this.CELL_SIZE)));
+            const gridY = Math.max(0, Math.min(this.BOARD_SIZE - 1, Math.round(adjustedCanvasY / this.CELL_SIZE)));
             
-            // Размещаем фигуру только если было движение касания (не просто тап)
             if (this.touchMoved && this.canPlacePiece(this.draggedPiece, gridX, gridY)) {
                 this.placePiece(this.draggedPiece, gridX, gridY);
             }
         }
         
-        // Сбрасываем состояние
         this.isDragging = false;
         this.draggedPiece = null;
         this.touchMoved = false;
+        this.isTouchDragging = false;
+        this.touchLiftOffset = this.TOUCH_LIFT_BASE;
         
-        // Убираем класс dragging со всех элементов
         document.querySelectorAll('.piece-item').forEach(el => {
             el.classList.remove('dragging');
         });
         
-        // Убираем выделение с фигуры
         this.clearSelection();
         
         this.draw();
