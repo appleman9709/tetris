@@ -1335,62 +1335,87 @@ class MobileSudokuTetris {
 
     drawGlassCell(ctx, pixelX, pixelY, size, baseColor, options = {}) {
         const alpha = options.alpha ?? 1;
-        const depth = options.depth ?? 0.2;
-        const radius = Math.max(3, size * 0.18);
-        const glow = options.glow ?? false;
+        const depth = options.depth ?? 0.25;
+        const radius = Math.max(2.5, size * 0.16);
+        const bevel = Math.max(2, size * 0.14);
+
+        const light = this.lightenColor(baseColor, 0.35);
+        const lightMid = this.lightenColor(baseColor, 0.15);
+        const dark = this.darkenColor(baseColor, depth);
+        const darker = this.darkenColor(baseColor, depth + 0.18);
 
         ctx.save();
 
-        ctx.shadowColor = this.addAlpha(this.darkenColor(baseColor, 0.35), (glow ? 0.22 : 0.15) * alpha);
-        ctx.shadowBlur = glow ? size * 0.2 : size * 0.12;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = size * 0.09;
-
         ctx.beginPath();
-        this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
-
-        const topColor = this.lightenColor(baseColor, 0.22);
-        const midColor = baseColor;
-        const bottomColor = this.darkenColor(baseColor, depth);
-        const bodyGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
-        bodyGradient.addColorStop(0, this.addAlpha(topColor, alpha));
-        bodyGradient.addColorStop(0.55, this.addAlpha(midColor, alpha));
-        bodyGradient.addColorStop(1, this.addAlpha(bottomColor, alpha));
-
-        ctx.fillStyle = bodyGradient;
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-
-        ctx.beginPath();
-        this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
-        const outlineColor = options.outlineColor
-            ? this.addAlpha(options.outlineColor, 0.85 * alpha)
-            : this.addAlpha(this.darkenColor(baseColor, 0.45), 0.38 * alpha);
-        ctx.strokeStyle = outlineColor;
-        ctx.lineWidth = 1.05;
-        ctx.stroke();
-
-        ctx.save();
-        ctx.beginPath();
-        this.roundRectPath(ctx, pixelX + 1, pixelY + 1, size - 2, size - 2, radius);
+        this.roundRectPath(ctx, pixelX + 0.5, pixelY + 0.5, size - 1, size - 1, radius);
+        ctx.closePath();
         ctx.clip();
 
-        const highlightGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
-        highlightGradient.addColorStop(0, this.addAlpha('#ffffff', 0.28 * alpha));
-        highlightGradient.addColorStop(0.4, this.addAlpha('#ffffff', 0.08 * alpha));
-        highlightGradient.addColorStop(0.6, this.addAlpha('#ffffff', 0));
-        ctx.fillStyle = highlightGradient;
+        const bodyGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX + size, pixelY + size);
+        bodyGradient.addColorStop(0, this.addAlpha(light, alpha));
+        bodyGradient.addColorStop(0.55, this.addAlpha(baseColor, alpha));
+        bodyGradient.addColorStop(1, this.addAlpha(dark, alpha));
+        ctx.fillStyle = bodyGradient;
         ctx.fillRect(pixelX, pixelY, size, size);
 
-        const shadowGradient = ctx.createLinearGradient(pixelX, pixelY, pixelX, pixelY + size);
-        shadowGradient.addColorStop(0.55, this.addAlpha('#000000', 0));
-        shadowGradient.addColorStop(1, this.addAlpha('#000000', 0.12 * alpha));
-        ctx.fillStyle = shadowGradient;
+        ctx.fillStyle = this.addAlpha(light, 0.85 * alpha);
+        ctx.beginPath();
+        ctx.moveTo(pixelX, pixelY);
+        ctx.lineTo(pixelX + size, pixelY);
+        ctx.lineTo(pixelX + size - bevel, pixelY + bevel);
+        ctx.lineTo(pixelX + bevel, pixelY + bevel);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = this.addAlpha(lightMid, 0.75 * alpha);
+        ctx.beginPath();
+        ctx.moveTo(pixelX, pixelY);
+        ctx.lineTo(pixelX + bevel, pixelY + bevel);
+        ctx.lineTo(pixelX + bevel, pixelY + size - bevel);
+        ctx.lineTo(pixelX, pixelY + size);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = this.addAlpha(darker, 0.75 * alpha);
+        ctx.beginPath();
+        ctx.moveTo(pixelX + size, pixelY);
+        ctx.lineTo(pixelX + size, pixelY + size);
+        ctx.lineTo(pixelX + size - bevel, pixelY + size - bevel);
+        ctx.lineTo(pixelX + size - bevel, pixelY + bevel);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = this.addAlpha(this.darkenColor(baseColor, depth + 0.25), 0.9 * alpha);
+        ctx.beginPath();
+        ctx.moveTo(pixelX, pixelY + size);
+        ctx.lineTo(pixelX + size, pixelY + size);
+        ctx.lineTo(pixelX + size - bevel, pixelY + size - bevel);
+        ctx.lineTo(pixelX + bevel, pixelY + size - bevel);
+        ctx.closePath();
+        ctx.fill();
+
+        const sparkle = ctx.createRadialGradient(
+            pixelX + bevel * 0.8,
+            pixelY + bevel * 0.8,
+            0,
+            pixelX + bevel * 0.8,
+            pixelY + bevel * 0.8,
+            bevel * 1.8
+        );
+        sparkle.addColorStop(0, this.addAlpha('#ffffff', 0.45 * alpha));
+        sparkle.addColorStop(1, this.addAlpha('#ffffff', 0));
+        ctx.fillStyle = sparkle;
         ctx.fillRect(pixelX, pixelY, size, size);
 
         ctx.restore();
+
+        ctx.save();
+        ctx.beginPath();
+        this.roundRectPath(ctx, pixelX + 0.5, pixelY + 0.5, size - 1, size - 1, radius);
+        ctx.closePath();
+        ctx.strokeStyle = this.addAlpha(this.darkenColor(baseColor, depth + 0.3), 0.65 * alpha);
+        ctx.lineWidth = 1;
+        ctx.stroke();
         ctx.restore();
     }
 
