@@ -56,7 +56,7 @@ body {
     color: #f8fafc;
     font-size: 18px;
     margin-right: 16px;
-    border-radius: 0;
+    border-radius: 12px;
     backdrop-filter: blur(18px);
     transition: all 0.2s ease;
 }
@@ -89,7 +89,7 @@ body {
     cursor: pointer;
     color: #f8fafc;
     font-size: 18px;
-    border-radius: 0;
+    border-radius: 12px;
     backdrop-filter: blur(18px);
     transition: all 0.2s ease;
 }
@@ -303,7 +303,7 @@ body.blue-theme .retro-btn {
 
 .pieces-panel {
     background: transparent;
-    border-radius: 0;
+    border-radius: 12px;
     padding: 18px;
     box-shadow: 0 24px 40px rgba(2, 6, 23, 0.45);
     width: 100%;
@@ -327,7 +327,7 @@ body.blue-theme .retro-btn {
 
 .piece-item {
     background: transparent;
-    border: 1px solid rgba(148, 163, 184, 0.25);
+    border: none;
     border-radius: 0;
     padding: 10px;
     cursor: pointer;
