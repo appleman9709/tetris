@@ -1,4 +1,4 @@
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -334,34 +334,34 @@ body.blue-theme .retro-btn {
     transition: all 0.2s ease;
     touch-action: none;
     user-select: none;
-    box-shadow: 0 16px 28px rgba(2, 6, 23, 0.35);
+    box-shadow: 0 2px 8px rgba(2, 6, 23, 0.15);
     backdrop-filter: blur(18px);
 }
 
 .piece-item:hover {
-    transform: translateY(-4px) scale(1.04);
-    box-shadow: 0 22px 38px rgba(2, 6, 23, 0.45);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(2, 6, 23, 0.25);
 }
 
 .piece-item:active {
-    transform: translateY(2px) scale(0.97);
+    transform: translateY(1px) scale(0.98);
     background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.3);
+    box-shadow: 0 1px 4px rgba(2, 6, 23, 0.2);
 }
 
 .piece-item.dragging {
     opacity: 0.92;
-    transform: translateY(-18px) scale(1.08);
+    transform: translateY(-8px) scale(1.04);
     z-index: 1000;
     background: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 24px 40px rgba(2, 6, 23, 0.55);
+    box-shadow: 0 8px 16px rgba(2, 6, 23, 0.3);
 }
 
 .piece-item.selected {
-    transform: translateY(-6px) scale(1.06);
+    transform: translateY(-3px) scale(1.03);
     box-shadow: 
-        0 24px 42px rgba(59, 130, 246, 0.45),
-        0 10px 24px rgba(2, 6, 23, 0.4);
+        0 8px 16px rgba(59, 130, 246, 0.3),
+        0 4px 8px rgba(2, 6, 23, 0.2);
     z-index: 100;
     transition: all 0.2s ease;
     border: 2px solid rgba(191, 219, 254, 0.9);
@@ -370,12 +370,7 @@ body.blue-theme .retro-btn {
 }
 
 .piece-item.selected .piece-canvas {
-    filter: brightness(1.05) drop-shadow(0 16px 26px rgba(59, 130, 246, 0.35));
-}
-
-.piece-item:hover {
-    transform: translateY(-4px) scale(1.04);
-    box-shadow: 0 22px 38px rgba(2, 6, 23, 0.45);
+    filter: brightness(1.05) drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
 }
 
 .piece-canvas {
@@ -383,7 +378,7 @@ body.blue-theme .retro-btn {
     height: auto;
     max-width: 100px;
     max-height: 100px;
-    filter: drop-shadow(0 14px 28px rgba(2, 6, 23, 0.45));
+    filter: drop-shadow(0 2px 4px rgba(2, 6, 23, 0.2));
     transition: filter 0.2s ease;
 }
 

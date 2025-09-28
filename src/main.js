@@ -556,9 +556,8 @@ class MobileSudokuTetris {
                 if (piece.shape[y][x]) {
                     const pixelX = x * cellSize;
                     const pixelY = y * cellSize;
-                    this.drawGlassCell(ctx, pixelX, pixelY, cellSize, baseColor, {
-                        depth: 0.24,
-                        alpha: 0.92
+                    this.drawFlatCell(ctx, pixelX, pixelY, cellSize, baseColor, {
+                        alpha: 0.95
                     });
                 }
             }
@@ -1098,15 +1097,15 @@ class MobileSudokuTetris {
 
         const baseColor = canPlace ? this.getCurrentColor() : '#ff4d4f';
         const previewOptions = canPlace
-            ? { alpha: 0.6, depth: 0.18, outlineColor: this.lightenColor(baseColor, 0.45) }
-            : { alpha: 0.5, depth: 0.18, outlineColor: '#ff4d4f' };
+            ? { alpha: 0.6 }
+            : { alpha: 0.5 };
 
         for (let py = 0; py < this.draggedPiece.shape.length; py++) {
             for (let px = 0; px < this.draggedPiece.shape[py].length; px++) {
                 if (this.draggedPiece.shape[py][px]) {
                     const x = (previewX + px) * this.CELL_SIZE;
                     const y = (previewY + py) * this.CELL_SIZE;
-                    this.drawGlassCell(this.ctx, x, y, this.CELL_SIZE, baseColor, previewOptions);
+                    this.drawFlatCell(this.ctx, x, y, this.CELL_SIZE, baseColor, previewOptions);
 
                     if (!canPlace) {
                         this.ctx.save();
@@ -1225,8 +1224,7 @@ class MobileSudokuTetris {
                 if (this.board[y][x]) {
                     const pixelX = x * this.CELL_SIZE;
                     const pixelY = y * this.CELL_SIZE;
-                    this.drawGlassCell(this.ctx, pixelX, pixelY, this.CELL_SIZE, baseColor, {
-                        depth: 0.2,
+                    this.drawFlatCell(this.ctx, pixelX, pixelY, this.CELL_SIZE, baseColor, {
                         alpha: 0.95
                     });
                 }
@@ -1416,6 +1414,28 @@ class MobileSudokuTetris {
         ctx.strokeStyle = this.addAlpha(this.darkenColor(baseColor, depth + 0.3), 0.65 * alpha);
         ctx.lineWidth = 1;
         ctx.stroke();
+        ctx.restore();
+    }
+
+    // Плоская версия отрисовки клеток без 3D эффекта
+    drawFlatCell(ctx, pixelX, pixelY, size, baseColor, options = {}) {
+        const alpha = options.alpha ?? 1;
+        const radius = Math.max(2, size * 0.12);
+
+        ctx.save();
+
+        // Простая заливка одним цветом
+        ctx.fillStyle = this.addAlpha(baseColor, alpha);
+        ctx.beginPath();
+        this.roundRectPath(ctx, pixelX + 0.5, pixelY + 0.5, size - 1, size - 1, radius);
+        ctx.closePath();
+        ctx.fill();
+
+        // Простая рамка
+        ctx.strokeStyle = this.addAlpha(this.darkenColor(baseColor, 0.3), 0.8 * alpha);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
         ctx.restore();
     }
 
