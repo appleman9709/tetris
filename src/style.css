@@ -4,14 +4,22 @@
     box-sizing: border-box;
 }
 
+html {
+    overflow: hidden;
+    height: 100%;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: radial-gradient(circle at 20% 10%, #1e293b 0%, #0f172a 45%, #020617 100%);
+    height: 100vh;
     height: 100dvh;
     margin: 0;
     padding: 0;
     color: #e2e8f0;
     overflow: hidden;
+    position: fixed;
+    width: 100%;
 }
 
 .game-container {
@@ -21,11 +29,15 @@ body {
     box-shadow: 0 24px 55px rgba(2, 6, 23, 0.55);
     max-width: 100%;
     width: 100%;
+    height: 100vh;
     height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     display: flex;
     flex-direction: column;
     position: relative;
     backdrop-filter: blur(26px);
+    overflow: hidden;
 }
 /* iPhone safe areas */
 @supports (padding: max(0px)) {
@@ -265,6 +277,7 @@ body.blue-theme .retro-btn {
     flex: 1;
     overflow: hidden;
     padding: 20px;
+    min-height: 0;
 }
 
 .score-display {
@@ -631,6 +644,20 @@ body.blue-theme .retro-btn {
     .game-container {
         padding-left: 0;
         padding-right: 0;
+        padding-top: 16px;
+        padding-bottom: 16px;
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100vh;
+        max-height: 100dvh;
+        overflow: hidden;
+    }
+    
+    .game-area {
+        padding: 10px;
+        gap: 15px;
+        min-height: 0;
+        overflow: hidden;
     }
     
     .game-board {
@@ -674,6 +701,16 @@ body.blue-theme .retro-btn {
         padding: 12px 25px;
         font-size: 1.1em;
     }
+}
+
+/* Дополнительные правила для предотвращения прокрутки */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+body, html {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* Анимации */
