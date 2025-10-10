@@ -1,21 +1,38 @@
 class MobileSudokuTetris {
     constructor() {
+        console.log('Создаем экземпляр игры...');
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            throw new Error('Canvas с id="gameCanvas" не найден!');
+        }
+        console.log('Canvas найден:', this.canvas);
+        
         this.ctx = this.canvas.getContext('2d');
+        if (!this.ctx) {
+            throw new Error('Не удалось получить контекст canvas!');
+        }
+        console.log('Контекст canvas получен');
+        
         this.piecesContainer = document.getElementById('piecesContainer');
+        if (!this.piecesContainer) {
+            throw new Error('Контейнер фигур с id="piecesContainer" не найден!');
+        }
+        console.log('Контейнер фигур найден:', this.piecesContainer);
         
         this.BOARD_SIZE = 9;
-        this.CELL_SIZE = 40; // Увеличенный размер для лучшей видимости
+        this.CELL_SIZE = 36; // Адаптивный размер для мобильных устройств
         
         // Устанавливаем размер canvas
         this.canvas.width = this.BOARD_SIZE * this.CELL_SIZE;
         this.canvas.height = this.BOARD_SIZE * this.CELL_SIZE;
         
         this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
+        this.boardColors = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(null));
         
         this.MAX_BLOCKS_PER_PIECE = 4;
         this.CLEAR_ANIMATION_DURATION = 360;
         this.clearAnimations = [];
+        this.placementAnimations = [];
         this.animationFrameId = null;
         
         this.score = 0;
@@ -40,14 +57,14 @@ class MobileSudokuTetris {
         this.selectedPiece = null;
         this.selectedPieceElement = null;
         
-        // Разнообразные фигуры
+        // Разнообразные фигуры с новой цветовой схемой
         this.tetrisPieces = [
             // Классические фигуры тетриса
             {
                 id: 'I',
                 name: 'Линия',
                 shape: [[1, 1, 1, 1]],
-                color: '#e53e3e',
+                color: '#3BA3FF', // Синий
                 size: 4
             },
             {
@@ -57,8 +74,8 @@ class MobileSudokuTetris {
                     [1, 1],
                     [1, 1]
                 ],
-                color: '#38a169',
-                size: 2
+                color: '#31C48D', // Зеленый
+                size: 2,
             },
             {
                 id: 'T',
@@ -67,7 +84,7 @@ class MobileSudokuTetris {
                     [0, 1, 0],
                     [1, 1, 1]
                 ],
-                color: '#3182ce',
+                color: '#FF8A34', // Оранжевый
                 size: 3
             },
             {
@@ -77,7 +94,7 @@ class MobileSudokuTetris {
                     [0, 1, 1],
                     [1, 1, 0]
                 ],
-                color: '#d69e2e',
+                color: '#7C5CFF', // Фиолетовый
                 size: 3
             },
             {
@@ -87,7 +104,7 @@ class MobileSudokuTetris {
                     [1, 1, 0],
                     [0, 1, 1]
                 ],
-                color: '#805ad5',
+                color: '#FF5A5F', // Красный
                 size: 3
             },
             {
@@ -97,7 +114,7 @@ class MobileSudokuTetris {
                     [1, 0, 0],
                     [1, 1, 1]
                 ],
-                color: '#dd6b20',
+                color: '#FFC145', // Янтарный
                 size: 3
             },
             {
@@ -107,10 +124,10 @@ class MobileSudokuTetris {
                     [0, 0, 1],
                     [1, 1, 1]
                 ],
-                color: '#38b2ac',
+                color: '#7AD53A', // Лаймовый
                 size: 3
             },
-            // Дополнительные фигуры
+            // Дополнительные фигуры с новой цветовой схемой
             {
                 id: 'CROSS',
                 name: 'Крест',
@@ -119,7 +136,7 @@ class MobileSudokuTetris {
                     [1, 1, 1],
                     [0, 1, 0]
                 ],
-                color: '#9f7aea',
+                color: '#3BA3FF', // Синий
                 size: 3
             },
             {
@@ -129,35 +146,35 @@ class MobileSudokuTetris {
                     [1, 1],
                     [1, 0]
                 ],
-                color: '#ed8936',
+                color: '#31C48D', // Зеленый
                 size: 2
             },
             {
                 id: 'LINE3',
                 name: 'Тройка',
                 shape: [[1, 1, 1]],
-                color: '#48bb78',
+                color: '#FF8A34', // Оранжевый
                 size: 3
             },
             {
                 id: 'LINE2',
                 name: 'Двойка',
                 shape: [[1, 1]],
-                color: '#4299e1',
+                color: '#7C5CFF', // Фиолетовый
                 size: 2
             },
             {
                 id: 'DOT',
                 name: 'Точка',
                 shape: [[1]],
-                color: '#f56565',
+                color: '#FF5A5F', // Красный
                 size: 1
             },
             {
                 id: 'LONG',
                 name: 'Длинная',
                 shape: [[1, 1, 1, 1, 1]],
-                color: '#68d391',
+                color: '#FFC145', // Янтарный
                 size: 5
             },
             {
@@ -168,7 +185,7 @@ class MobileSudokuTetris {
                     [1, 1, 0],
                     [1, 1, 1]
                 ],
-                color: '#4fd1c7',
+                color: '#7AD53A', // Лаймовый
                 size: 3
             },
             {
@@ -178,7 +195,7 @@ class MobileSudokuTetris {
                     [0, 1, 0],
                     [1, 1, 1]
                 ],
-                color: '#f6ad55',
+                color: '#3BA3FF', // Синий
                 size: 3
             },
             {
@@ -189,7 +206,7 @@ class MobileSudokuTetris {
                     [1, 1, 1],
                     [0, 1, 0]
                 ],
-                color: '#9f7aea',
+                color: '#31C48D', // Зеленый
                 size: 3
             },
             {
@@ -200,14 +217,14 @@ class MobileSudokuTetris {
                     [1, 0],
                     [1, 1]
                 ],
-                color: '#38b2ac',
+                color: '#FF8A34', // Оранжевый
                 size: 3
             },
             {
                 id: 'LINE4',
                 name: 'Четверка',
                 shape: [[1, 1, 1, 1]],
-                color: '#48bb78',
+                color: '#7C5CFF', // Фиолетовый
                 size: 4
             },
             {
@@ -218,7 +235,7 @@ class MobileSudokuTetris {
                     [1, 0],
                     [1, 0]
                 ],
-                color: '#ed8936',
+                color: '#FF5A5F', // Красный
                 size: 3
             },
             {
@@ -229,7 +246,7 @@ class MobileSudokuTetris {
                     [0, 1, 1],
                     [0, 0, 1]
                 ],
-                color: '#805ad5',
+                color: '#FFC145', // Янтарный
                 size: 3
             },
             {
@@ -240,7 +257,7 @@ class MobileSudokuTetris {
                     [1, 0],
                     [1, 1]
                 ],
-                color: '#dd6b20',
+                color: '#7AD53A', // Лаймовый
                 size: 3
             },
             {
@@ -251,7 +268,7 @@ class MobileSudokuTetris {
                     [1, 1, 1],
                     [0, 1, 0]
                 ],
-                color: '#38a169',
+                color: '#3BA3FF', // Синий
                 size: 3
             },
             {
@@ -262,14 +279,14 @@ class MobileSudokuTetris {
                     [0, 1, 0],
                     [1, 0, 1]
                 ],
-                color: '#3182ce',
+                color: '#31C48D', // Зеленый
                 size: 3
             },
             {
                 id: 'LONG4',
                 name: 'Длинная 4',
                 shape: [[1, 1, 1, 1]],
-                color: '#d69e2e',
+                color: '#FF8A34', // Оранжевый
                 size: 4
             },
             {
@@ -280,8 +297,8 @@ class MobileSudokuTetris {
                     [1, 1],
                     [1, 0]
                 ],
-                color: '#f56565',
-                size: 3
+                color: '#7C5CFF', // Фиолетовый
+                size: 3,
             }
         ];
         
@@ -314,6 +331,27 @@ class MobileSudokuTetris {
         ];
         
         this.init();
+        this.startComplimentRotation();
+    }
+    
+    // Функция для ротации комплиментов
+    startComplimentRotation() {
+        const complimentElement = document.getElementById('complimentText');
+        if (!complimentElement) return;
+        
+        let currentIndex = 0;
+        
+        // Меняем комплимент каждые 5 секунд
+        setInterval(() => {
+            currentIndex = (currentIndex + 1) % this.compliments.length;
+            complimentElement.textContent = this.compliments[currentIndex];
+            
+            // Добавляем анимацию смены
+            complimentElement.style.opacity = '0.5';
+            setTimeout(() => {
+                complimentElement.style.opacity = '1';
+            }, 200);
+        }, 5000);
     }
     
     // Функция для подсчета кубиков в фигуре
@@ -336,12 +374,25 @@ class MobileSudokuTetris {
         this.selectedPiece = piece;
         this.selectedPieceElement = element;
         element.classList.add('selected');
+        
+        // Выделяем соответствующий слот
+        const slot = element.closest('[id^="slot"]');
+        if (slot) {
+            slot.classList.add('active');
+        }
     }
     
     clearSelection() {
         if (this.selectedPieceElement) {
             this.selectedPieceElement.classList.remove('selected');
         }
+        
+        // Убираем выделение со всех слотов
+        const slots = document.querySelectorAll('[id^="slot"]');
+        slots.forEach(slot => {
+            slot.classList.remove('active');
+        });
+        
         this.selectedPiece = null;
         this.selectedPieceElement = null;
     }
@@ -365,6 +416,7 @@ class MobileSudokuTetris {
     saveGameState() {
         const gameState = {
             board: this.board,
+            boardColors: this.boardColors,
             score: this.score,
             level: this.level,
             lines: this.lines,
@@ -396,6 +448,7 @@ class MobileSudokuTetris {
                 }
                 
                 this.board = gameState.board;
+                this.boardColors = gameState.boardColors || Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(null));
                 this.score = gameState.score;
                 this.level = gameState.level;
                 this.lines = gameState.lines;
@@ -490,7 +543,7 @@ class MobileSudokuTetris {
     
     generatePieces() {
         this.availablePieces = [];
-        const piecesToGenerate = 5; // Number of pieces shown on the tray
+        const piecesToGenerate = 3; // Показываем только 3 фигуры как на картинке
         
         const allVariants = [];
         this.tetrisPieces.forEach(piece => {
@@ -505,6 +558,10 @@ class MobileSudokuTetris {
             const randomIndex = Math.floor(Math.random() * allVariants.length);
             const piece = JSON.parse(JSON.stringify(allVariants[randomIndex]));
             piece.uniqueId = `piece_${i}_${Date.now()}`;
+            
+            // Убеждаемся, что цвет фигуры сохранен правильно
+            this.ensurePieceColor(piece);
+            
             this.availablePieces.push(piece);
         }
 
@@ -515,24 +572,60 @@ class MobileSudokuTetris {
     }
     
     renderPieces(animate = false) {
-        this.piecesContainer.innerHTML = '';
+        // Очищаем все слоты
+        const slots = document.querySelectorAll('[id^="slot"]');
+        slots.forEach(slot => {
+            slot.innerHTML = '';
+            slot.classList.remove('active', 'empty');
+        });
         
         this.availablePieces.forEach((piece, index) => {
+            // Убеждаемся, что цвет фигуры правильный перед отрисовкой
+            this.ensurePieceColor(piece);
+            
+            const slot = document.getElementById(`slot${index + 1}`);
+            if (!slot) return;
+            
             const pieceElement = document.createElement('div');
             pieceElement.className = 'piece-item';
             pieceElement.draggable = true;
             pieceElement.dataset.pieceId = piece.uniqueId;
             
+            // Добавляем атрибут цвета для CSS стилизации
+            const colorName = this.getColorName(piece.color);
+            pieceElement.dataset.color = colorName;
+            
             const canvas = document.createElement('canvas');
             canvas.className = 'piece-canvas';
-            canvas.width = piece.size * 20;
-            canvas.height = piece.size * 20;
+            
+            // Вычисляем размеры фигуры для правильного масштабирования
+            const pieceWidth = piece.shape[0].length;
+            const pieceHeight = piece.shape.length;
+            const maxDimension = Math.max(pieceWidth, pieceHeight);
+            
+            // Размер клетки 75% от размера на игровом поле (27px)
+            const cellSize = this.CELL_SIZE * 0.75;
+            const gap = 2; // Зазор между клетками
+            
+            // Рассчитываем размер canvas с учетом зазоров
+            const canvasWidth = pieceWidth * cellSize + (pieceWidth - 1) * gap;
+            const canvasHeight = pieceHeight * cellSize + (pieceHeight - 1) * gap;
+            
+            // Добавляем небольшой отступ для лучшего отображения
+            const padding = 4;
+            const finalCanvasWidth = canvasWidth + padding * 2;
+            const finalCanvasHeight = canvasHeight + padding * 2;
+            
+            // Устанавливаем размеры canvas
+            canvas.width = finalCanvasWidth;
+            canvas.height = finalCanvasHeight;
             
             const ctx = canvas.getContext('2d');
-            this.drawPieceOnCanvas(ctx, piece, 20);
+            // Отрисовываем фигуру с реальным размером клеток и отступом
+            this.drawPieceOnCanvas(ctx, piece, cellSize, padding);
             
             pieceElement.appendChild(canvas);
-            this.piecesContainer.appendChild(pieceElement);
+            slot.appendChild(pieceElement);
             
             // Добавляем анимацию появления только если animate = true
             if (animate) {
@@ -542,26 +635,286 @@ class MobileSudokuTetris {
                     // Убираем класс анимации после завершения
                     setTimeout(() => {
                         pieceElement.classList.remove('appearing');
-                    }, 600); // Длительность анимации
+                    }, 120); // Длительность анимации согласно спецификации
                 }, index * 100); // Задержка между фигурами
             }
         });
+        
+        // Помечаем пустые слоты
+        for (let i = this.availablePieces.length; i < 3; i++) {
+            const slot = document.getElementById(`slot${i + 1}`);
+            if (slot) {
+                slot.classList.add('empty');
+            }
+        }
     }
     
-    drawPieceOnCanvas(ctx, piece, cellSize) {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        const baseColor = piece.color || this.getCurrentColor();
-        for (let y = 0; y < piece.shape.length; y++) {
-            for (let x = 0; x < piece.shape[y].length; x++) {
-                if (piece.shape[y][x]) {
-                    const pixelX = x * cellSize;
-                    const pixelY = y * cellSize;
-                    this.drawFlatCell(ctx, pixelX, pixelY, cellSize, baseColor, {
-                        alpha: 0.95
+    // Метод для получения имени цвета из hex значения
+    getColorName(hexColor) {
+        const colorMap = {
+            '#3BA3FF': 'blue',
+            '#31C48D': 'green', 
+            '#FF8A34': 'orange',
+            '#7C5CFF': 'purple',
+            '#FF5A5F': 'red',
+            '#FFC145': 'amber',
+            '#7AD53A': 'lime'
+        };
+        return colorMap[hexColor] || 'blue';
+    }
+    
+    // Метод для обеспечения правильного цвета фигуры
+    ensurePieceColor(piece) {
+        // Если у фигуры нет цвета или цвет неправильный, восстанавливаем его
+        if (!piece.color || !this.isValidColor(piece.color)) {
+            // Находим оригинальную фигуру по ID и восстанавливаем цвет
+            const originalPiece = this.tetrisPieces.find(p => p.id === piece.id);
+            if (originalPiece) {
+                piece.color = originalPiece.color;
+                console.log(`Восстановлен цвет для фигуры ${piece.id}: ${piece.color}`);
+            } else {
+                // Fallback цвет
+                piece.color = '#3BA3FF';
+                console.log(`Установлен fallback цвет для фигуры ${piece.id}: ${piece.color}`);
+            }
+        }
+    }
+    
+    // Проверяет, является ли цвет валидным
+    isValidColor(color) {
+        const validColors = ['#3BA3FF', '#31C48D', '#FF8A34', '#7C5CFF', '#FF5A5F', '#FFC145', '#7AD53A'];
+        return validColors.includes(color);
+    }
+    
+    // Анимация размещения фигуры: scale from 0.96 → 1.0 (120ms), затем короткая вспышка (inner-glow) 80ms
+    animatePiecePlacement(x, y, piece) {
+        // Создаем временные элементы для анимации
+        const cells = [];
+        for (let py = 0; py < piece.shape.length; py++) {
+            for (let px = 0; px < piece.shape[py].length; px++) {
+                if (piece.shape[py][px]) {
+                    cells.push({
+                        x: x + px,
+                        y: y + py,
+                        startTime: performance.now()
                     });
                 }
             }
         }
+        
+        // Добавляем анимацию масштабирования
+        this.placementAnimations = cells;
+        this.draw();
+        
+        // Запускаем анимацию
+        const animate = (timestamp) => {
+            let hasActiveAnimations = false;
+            
+            this.placementAnimations = this.placementAnimations.filter(cell => {
+                const elapsed = timestamp - cell.startTime;
+                const progress = Math.min(elapsed / 120, 1); // 120ms для масштабирования
+                
+                if (progress < 1) {
+                    hasActiveAnimations = true;
+                    cell.progress = progress;
+                } else {
+                    // После завершения масштабирования добавляем вспышку
+                    cell.flashStartTime = timestamp;
+                    cell.flashProgress = 0;
+                }
+                
+                return elapsed < 200; // Общая длительность анимации
+            });
+            
+            if (hasActiveAnimations || this.placementAnimations.length > 0) {
+                this.draw();
+                requestAnimationFrame(animate);
+            } else {
+                this.placementAnimations = [];
+            }
+        };
+        
+        requestAnimationFrame(animate);
+    }
+    
+    drawPieceOnCanvas(ctx, piece, cellSize, padding = 0) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        
+        // Используем цвет фигуры из новой цветовой схемы
+        const baseColor = piece.color || '#3BA3FF';
+        
+        // Межблочный зазор 2px согласно спецификации
+        const gap = 2;
+        
+        for (let y = 0; y < piece.shape.length; y++) {
+            for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                    const pixelX = x * (cellSize + gap) + padding;
+                    const pixelY = y * (cellSize + gap) + padding;
+                    this.drawPieceCell(ctx, pixelX, pixelY, cellSize, baseColor);
+                }
+            }
+        }
+    }
+    
+    // Новый метод для отрисовки современной клетки согласно спецификации
+    drawModernCell(ctx, x, y, size, baseColor) {
+        const radius = 8; // Скругление 8px согласно спецификации
+        const padding = 1;
+        
+        ctx.save();
+        
+        // Основная заливка сплошным цветом фигуры
+        ctx.fillStyle = baseColor;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.fill();
+        
+        // Лёгкий внутренний блик (радиальный градиент 8-12% непрозрачности) для "soft 3D"
+        const innerGradient = ctx.createRadialGradient(
+            x + size * 0.3, y + size * 0.3, 0,
+            x + size * 0.3, y + size * 0.3, size * 0.6
+        );
+        innerGradient.addColorStop(0, this.addAlpha('#ffffff', 0.1));
+        innerGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+        
+        ctx.fillStyle = innerGradient;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.fill();
+        
+        // Тонкая внутренняя тень для "кирпичикового" эффекта
+        ctx.shadowColor = this.addAlpha('#000000', 0.1);
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 1;
+        
+        ctx.strokeStyle = this.addAlpha(baseColor, 0.8);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+    
+    // Метод для отрисовки клеток фигур в лотке с плоским дизайном + "soft 3D" эффектом
+    drawPieceCell(ctx, x, y, size, baseColor) {
+        const radius = 8; // Скругление 8px согласно спецификации
+        const padding = 1;
+        
+        ctx.save();
+        
+        // Основная заливка сплошным цветом фигуры
+        ctx.fillStyle = baseColor;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.fill();
+        
+        // Лёгкий внутренний блик (радиальный градиент 8-12% непрозрачности) для "soft 3D"
+        const innerGradient = ctx.createRadialGradient(
+            x + size * 0.3, y + size * 0.3, 0,
+            x + size * 0.3, y + size * 0.3, size * 0.6
+        );
+        innerGradient.addColorStop(0, this.addAlpha('#ffffff', 0.1));
+        innerGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+        
+        ctx.fillStyle = innerGradient;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.fill();
+        
+        // Тонкая внутренняя тень для "кирпичикового" эффекта
+        ctx.shadowColor = this.addAlpha('#000000', 0.1);
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 1;
+        
+        ctx.strokeStyle = this.addAlpha(baseColor, 0.8);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+    
+    // Функция для рисования искр вокруг блока
+    drawSparkles(ctx, x, y, size, baseColor) {
+        ctx.save();
+        
+        // Создаем случайные искры вокруг блока
+        const sparkleCount = 3 + Math.floor(Math.random() * 3);
+        const sparklePositions = [
+            { x: x - 8, y: y - 8 },
+            { x: x + size + 4, y: y - 6 },
+            { x: x - 6, y: y + size + 4 },
+            { x: x + size + 6, y: y + size + 6 },
+            { x: x + size / 2, y: y - 10 },
+            { x: x - 10, y: y + size / 2 },
+            { x: x + size + 8, y: y + size / 2 },
+            { x: x + size / 2, y: y + size + 8 }
+        ];
+        
+        for (let i = 0; i < sparkleCount; i++) {
+            const pos = sparklePositions[i % sparklePositions.length];
+            const sparkleSize = 2 + Math.random() * 3;
+            const alpha = 0.6 + Math.random() * 0.4;
+            
+            // Создаем градиент для искры
+            const sparkleGradient = ctx.createRadialGradient(
+                pos.x, pos.y, 0,
+                pos.x, pos.y, sparkleSize
+            );
+            sparkleGradient.addColorStop(0, this.addAlpha('#ffffff', alpha));
+            sparkleGradient.addColorStop(0.7, this.addAlpha('#ffffff', alpha * 0.5));
+            sparkleGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+            
+            ctx.fillStyle = sparkleGradient;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, sparkleSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Добавляем маленький блик
+            ctx.fillStyle = this.addAlpha('#ffffff', alpha * 0.8);
+            ctx.beginPath();
+            ctx.arc(pos.x - sparkleSize * 0.3, pos.y - sparkleSize * 0.3, sparkleSize * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.restore();
+    }
+    
+    // Метод для отрисовки предварительного просмотра согласно спецификации
+    drawModernCellPreview(ctx, x, y, size, baseColor) {
+        const radius = 8; // Скругление 8px согласно спецификации
+        const padding = 1;
+        
+        ctx.save();
+        
+        // Превью-призрак при наведении на поле: заливка 30–40% прозрачности
+        ctx.globalAlpha = 0.35;
+        
+        // Основная заливка сплошным цветом
+        ctx.fillStyle = baseColor;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.fill();
+        
+        // Лёгкий внутренний блик для "soft 3D" эффекта
+        const innerGradient = ctx.createRadialGradient(
+            x + size * 0.3, y + size * 0.3, 0,
+            x + size * 0.3, y + size * 0.3, size * 0.6
+        );
+        innerGradient.addColorStop(0, this.addAlpha('#ffffff', 0.05));
+        innerGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
+        
+        ctx.fillStyle = innerGradient;
+        ctx.beginPath();
+        this.roundRectPath(ctx, x + padding, y + padding, size - padding * 2, size - padding * 2, radius);
+        ctx.fill();
+        
+        ctx.restore();
     }
 
     calculatePieceHeight(piece) {
@@ -616,9 +969,9 @@ class MobileSudokuTetris {
 
     setupEventListeners() {
         // События для canvas
-        this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e));
-        this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e));
-        this.canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+        this.canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
+        this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: true });
+        this.canvas.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
         
         // События для фигур - touch события
         this.piecesContainer.addEventListener('touchstart', (e) => this.handlePieceTouchStart(e), { passive: false });
@@ -631,8 +984,11 @@ class MobileSudokuTetris {
         this.piecesContainer.addEventListener('mouseup', (e) => this.handlePieceMouseEnd(e));
         
         // Кнопки управления
-        document.getElementById('backBtn').addEventListener('click', () => this.restart());
-        document.getElementById('settingsBtn').addEventListener('click', () => this.clearBoard());
+        const newGameBtn = document.getElementById('newGameBtn');
+        
+        if (newGameBtn) {
+            newGameBtn.addEventListener('click', () => this.restart());
+        }
         
         // Предотвращаем скролл страницы при перетаскивании
         document.addEventListener('touchmove', (e) => {
@@ -871,6 +1227,7 @@ class MobileSudokuTetris {
                     const boardX = x + px;
                     const boardY = y + py;
                     this.board[boardY][boardX] = 1;
+                    this.boardColors[boardY][boardX] = piece.color;
                 }
             }
         }
@@ -880,6 +1237,9 @@ class MobileSudokuTetris {
         
         // Убираем выделение с размещенной фигуры
         this.clearSelection();
+        
+        // Добавляем анимацию размещения фигуры
+        this.animatePiecePlacement(x, y, piece);
         
         // Проверяем заполненные линии
         this.checkLines();
@@ -981,6 +1341,7 @@ class MobileSudokuTetris {
         const clearedCells = Array.from(cellsMap.values());
         clearedCells.forEach(({ x, y }) => {
             this.board[y][x] = 0;
+            this.boardColors[y][x] = null;
         });
 
         if (clearedCells.length) {
@@ -1080,12 +1441,11 @@ class MobileSudokuTetris {
     }
     
     getCurrentColor() {
-        if (document.body.classList.contains('pink-theme')) {
-            return '#e91e63';
-        } else if (document.body.classList.contains('blue-theme')) {
-            return '#2196f3';
+        // Возвращаем цвет первой доступной фигуры или синий по умолчанию
+        if (this.availablePieces && this.availablePieces.length > 0) {
+            return this.availablePieces[0].color;
         }
-        return '#007AFF'; // Синий цвет в стиле iOS по умолчанию
+        return '#3BA3FF'; // Синий цвет по умолчанию
     }
     
     drawWithPreview(previewX, previewY, canPlace = true) {
@@ -1095,27 +1455,17 @@ class MobileSudokuTetris {
             return;
         }
 
-        const baseColor = canPlace ? this.getCurrentColor() : '#ff4d4f';
-        const previewOptions = canPlace
-            ? { alpha: 0.6 }
-            : { alpha: 0.5 };
+        // Валидно: зеленоватая подсветка rgba(49,196,141,0.35)
+        // Невалидно: розовая rgba(255,90,95,0.35)
+        const baseColor = canPlace ? '#31C48D' : '#FF5A5F';
 
         for (let py = 0; py < this.draggedPiece.shape.length; py++) {
             for (let px = 0; px < this.draggedPiece.shape[py].length; px++) {
                 if (this.draggedPiece.shape[py][px]) {
                     const x = (previewX + px) * this.CELL_SIZE;
                     const y = (previewY + py) * this.CELL_SIZE;
-                    this.drawFlatCell(this.ctx, x, y, this.CELL_SIZE, baseColor, previewOptions);
-
-                    if (!canPlace) {
-                        this.ctx.save();
-                        this.ctx.strokeStyle = this.addAlpha('#ff6b6b', 0.8);
-                        this.ctx.lineWidth = 2;
-                        this.ctx.beginPath();
-                        this.roundRectPath(this.ctx, x + 2, y + 2, this.CELL_SIZE - 4, this.CELL_SIZE - 4, Math.max(4, this.CELL_SIZE * 0.22));
-                        this.ctx.stroke();
-                        this.ctx.restore();
-                    }
+                    
+                    this.drawModernCellPreview(this.ctx, x, y, this.CELL_SIZE, baseColor);
                 }
             }
         }
@@ -1126,6 +1476,7 @@ class MobileSudokuTetris {
 
         this.drawSudokuGrid();
         this.drawBoard();
+        this.drawPlacementAnimations();
         this.drawClearAnimations();
     }
 
@@ -1133,7 +1484,9 @@ class MobileSudokuTetris {
         this.drawRegionBackgrounds();
 
         this.ctx.save();
-        this.ctx.strokeStyle = this.addAlpha('#cbd5f5', 0.4);
+        
+        // Тонкие линии 1px для базовой сетки
+        this.ctx.strokeStyle = '#E5DFD6';
         this.ctx.lineWidth = 1;
 
         for (let i = 0; i <= this.BOARD_SIZE; i++) {
@@ -1150,8 +1503,9 @@ class MobileSudokuTetris {
             this.ctx.stroke();
         }
 
-        this.ctx.lineWidth = 2.5;
-        this.ctx.strokeStyle = this.addAlpha('#e2e8f0', 0.5);
+        // Утолщённые 2px для границ блоков 3×3
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = '#CFC6B8';
 
         for (let i = 0; i <= this.BOARD_SIZE; i += 3) {
             const pos = i * this.CELL_SIZE + 0.5;
@@ -1173,63 +1527,61 @@ class MobileSudokuTetris {
     drawRegionBackgrounds() {
         this.ctx.save();
 
-        const baseGradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, this.canvas.height);
-        baseGradient.addColorStop(0, this.addAlpha('#1f2937', 0.52));
-        baseGradient.addColorStop(1, this.addAlpha('#0f172a', 0.68));
-        this.ctx.fillStyle = baseGradient;
+        // Фон поля: тёплый светлый (#FAF6EF)
+        this.ctx.fillStyle = '#FAF6EF';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        const highlightGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        highlightGradient.addColorStop(0, this.addAlpha('#ffffff', 0.15));
-        highlightGradient.addColorStop(0.35, this.addAlpha('#ffffff', 0.05));
-        highlightGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
-        this.ctx.fillStyle = highlightGradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        const regionsToFill = [
-            { startX: 3, startY: 0 },   // Регион 2: Верхний центральный
-            { startX: 0, startY: 3 },   // Регион 4: Средний левый
-            { startX: 3, startY: 3 },   // Регион 5: Центральный
-            { startX: 6, startY: 3 },   // Регион 6: Средний правый
-            { startX: 3, startY: 6 }     // Регион 8: Нижний центральный
-        ];
-
-        for (let region of regionsToFill) {
-            const x = region.startX * this.CELL_SIZE;
-            const y = region.startY * this.CELL_SIZE;
-            const size = 3 * this.CELL_SIZE;
-
-            const regionGradient = this.ctx.createRadialGradient(
-                x + size / 2,
-                y + size / 2,
-                this.CELL_SIZE * 0.35,
-                x + size / 2,
-                y + size / 2,
-                size * 0.95
-            );
-            regionGradient.addColorStop(0, this.addAlpha('#ffffff', 0.09));
-            regionGradient.addColorStop(1, this.addAlpha('#ffffff', 0));
-            this.ctx.fillStyle = regionGradient;
-            this.ctx.fillRect(x, y, size, size);
-        }
 
         this.ctx.restore();
     }
 
     drawBoard() {
-        const baseColor = this.getCurrentColor();
-
         for (let y = 0; y < this.BOARD_SIZE; y++) {
             for (let x = 0; x < this.BOARD_SIZE; x++) {
                 if (this.board[y][x]) {
                     const pixelX = x * this.CELL_SIZE;
                     const pixelY = y * this.CELL_SIZE;
-                    this.drawFlatCell(this.ctx, pixelX, pixelY, this.CELL_SIZE, baseColor, {
-                        alpha: 0.95
-                    });
+                    const cellColor = this.boardColors[y][x] || '#3BA3FF'; // Используем сохраненный цвет или синий по умолчанию
+                    this.drawModernCell(this.ctx, pixelX, pixelY, this.CELL_SIZE, cellColor);
                 }
             }
         }
+    }
+
+    drawPlacementAnimations() {
+        if (!this.placementAnimations || this.placementAnimations.length === 0) {
+            return;
+        }
+
+        const baseColor = '#3BA3FF'; // Синий цвет для размещенных фигур
+
+        this.placementAnimations.forEach(cell => {
+            const pixelX = cell.x * this.CELL_SIZE;
+            const pixelY = cell.y * this.CELL_SIZE;
+            
+            if (cell.progress !== undefined) {
+                // Анимация масштабирования
+                const scale = 0.96 + (0.04 * cell.progress);
+                this.ctx.save();
+                this.ctx.translate(pixelX + this.CELL_SIZE / 2, pixelY + this.CELL_SIZE / 2);
+                this.ctx.scale(scale, scale);
+                this.ctx.translate(-this.CELL_SIZE / 2, -this.CELL_SIZE / 2);
+                this.drawModernCell(this.ctx, 0, 0, this.CELL_SIZE, baseColor);
+                this.ctx.restore();
+            } else if (cell.flashProgress !== undefined) {
+                // Анимация вспышки
+                const flashElapsed = performance.now() - cell.flashStartTime;
+                const flashProgress = Math.min(flashElapsed / 80, 1); // 80ms для вспышки
+                const flashAlpha = Math.sin(flashProgress * Math.PI) * 0.3;
+                
+                this.ctx.save();
+                this.ctx.globalAlpha = flashAlpha;
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.beginPath();
+                this.roundRectPath(this.ctx, pixelX + 2, pixelY + 2, this.CELL_SIZE - 4, this.CELL_SIZE - 4, 6);
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+        });
     }
 
     drawClearAnimations() {
@@ -1237,7 +1589,7 @@ class MobileSudokuTetris {
             return;
         }
 
-        const baseColor = this.getCurrentColor();
+        const baseColor = '#3BA3FF'; // Синий цвет для анимаций очистки
 
         this.clearAnimations.forEach(effect => {
             const progress = effect.progress ?? 0;
@@ -1483,9 +1835,13 @@ class MobileSudokuTetris {
     }
 
     updateUI() {
-        document.getElementById('levelDisplay').textContent = this.level;
-        document.getElementById('record').textContent = this.record;
-        document.getElementById('currentScore').textContent = this.score;
+        const levelDisplay = document.getElementById('levelDisplay');
+        const record = document.getElementById('record');
+        const currentScore = document.getElementById('currentScore');
+        
+        if (levelDisplay) levelDisplay.textContent = this.level;
+        if (record) record.textContent = this.record;
+        if (currentScore) currentScore.textContent = this.score;
     }
     
     // Показывает комплимент при достижении нового уровня
@@ -1536,6 +1892,7 @@ class MobileSudokuTetris {
     
     clearBoard() {
         this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
+        this.boardColors = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(null));
         this.draw();
         
         // Сохраняем игру после очистки доски
@@ -1586,6 +1943,7 @@ class MobileSudokuTetris {
     
     restart() {
         this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
+        this.boardColors = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(null));
         this.score = 0;
         this.level = 1;
         this.lines = 0;
@@ -1616,8 +1974,8 @@ window.restartGame = function() {
 // Theme switching functionality
 class ThemeManager {
     constructor() {
-        this.currentTheme = 'red'; // red, pink, blue
-        this.themes = ['red', 'pink', 'blue'];
+        this.currentTheme = 'light'; // light, pink, blue
+        this.themes = ['light', 'pink', 'blue'];
         this.themeIndex = 0;
         this.init();
     }
@@ -1643,37 +2001,15 @@ class ThemeManager {
     }
     
     setTheme(theme) {
-        // Remove all theme classes
-        document.body.classList.remove('pink-theme', 'blue-theme');
-        
-        if (theme === 'pink') {
-            document.body.classList.add('pink-theme');
-            this.updatePieceColors('#e91e63');
-        } else if (theme === 'blue') {
-            document.body.classList.add('blue-theme');
-            this.updatePieceColors('#2196f3');
-        } else {
-            this.updatePieceColors('#e74c3c');
-        }
-        
+        // Отключаем переключение тем, чтобы фигуры сохраняли свои цвета
+        console.log('Переключение тем отключено для сохранения цветов фигур');
         this.currentTheme = theme;
     }
     
     updatePieceColors(color) {
-        // Update piece colors in the game
-        if (window.game && window.game.tetrisPieces) {
-            window.game.tetrisPieces.forEach(piece => {
-                piece.color = color;
-            });
-            // Обновляем цвета доступных фигур
-            if (window.game.availablePieces) {
-                window.game.availablePieces.forEach(piece => {
-                    piece.color = color;
-                });
-            }
-            window.game.draw();
-            window.game.renderPieces(false);
-        }
+        // Отключаем перекрашивание фигур, так как теперь у нас есть правильная цветовая схема
+        // Фигуры должны сохранять свои оригинальные цвета из новой схемы
+        console.log('Цветовая схема фигур теперь фиксированная');
     }
 }
 
@@ -1681,7 +2017,15 @@ class ThemeManager {
 let game;
 let themeManager;
 window.addEventListener('load', () => {
-    game = new MobileSudokuTetris();
-    window.game = game; // Делаем доступным глобально
-    themeManager = new ThemeManager();
+    try {
+        console.log('Начинаем инициализацию игры...');
+        game = new MobileSudokuTetris();
+        window.game = game; // Делаем доступным глобально
+        console.log('Игра инициализирована успешно');
+        themeManager = new ThemeManager();
+        console.log('Менеджер тем инициализирован');
+    } catch (error) {
+        console.error('Ошибка при инициализации игры:', error);
+        alert('Ошибка при загрузке игры: ' + error.message);
+    }
 });
